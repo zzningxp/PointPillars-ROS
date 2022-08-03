@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>test_point_pillars</name>
+  <version>1.12.0</version>
+  <description>lidar_point_pillars</description>
+  <maintainer email="cirpue49@yahoo.co.jp">Kosuke Murakami</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>lidar_point_pillars</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>lidar_point_pillars</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
+</package>

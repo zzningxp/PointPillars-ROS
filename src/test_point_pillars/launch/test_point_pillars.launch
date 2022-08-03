@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="test_point_pillars" type="test_point_pillars" name="test_point_pillars" output="screen" >
+  </node>
+</launch>
