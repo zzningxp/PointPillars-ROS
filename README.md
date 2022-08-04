@@ -4,6 +4,11 @@ A 3D detection Pointpillars ROS deployment on Nvidia Jetson TX1/TX2
 This repo implements https://github.com/hova88/PointPillars_MultiHead_40FPS into Autoware lidar_point_pillars framework https://github.com/autowarefoundation/autoware_ai_perception/tree/master/lidar_point_pillars
 
 # Requirements (My Environment)
+
+```
+Ubuntu 18.04
+ROS Melodic
+
 jetson_release
  - NVIDIA Jetson TX1
    * Jetpack 4.5.1 [L4T 32.5.1]
@@ -17,6 +22,7 @@ jetson_release
    * OpenCV: 3.4.5 compiled CUDA: YES
    * VPI: ii libnvvpi1 1.0.15 arm64 NVIDIA Vision Programming Interface library
    * Vulkan: 1.2.70
+```
 
 # Usage
 ## How to compile
@@ -24,11 +30,16 @@ jetson_release
 Simply, use catkin_make build up the whole project.
 
 ## How to launch
-Launch file (cuDNN and TensorRT support): roslaunch lidar_point_pillars lidar_point_pillars.launch pfe_onnx_file:=/PATH/TO/FILE.onnx rpn_onnx_file:=/PATH/TO/FILE.onnx input_topic:=/points_raw
+Launch file (cuDNN and TensorRT support): 
 
-Launch file: roslaunch lidar_point_pillars lidar_point_pillars.launch
+`pfe_onnx_file, rpn_onnx_file, pp_config, input_topic` are required
+
+```
+roslaunch lidar_point_pillars lidar_point_pillars.launch pfe_onnx_file:=/PATH/TO/FILE.onnx rpn_onnx_file:=/PATH/TO/FILE.onnx pp_config:=/PATH/TO/pp_multihead.yaml input_topic:=/points_raw 
+```
 
 ## Models Files:
+From: https://github.com/hova88/PointPillars_MultiHead_40FPS
 
 [cbgs_pp_multihead_pfe.onnx](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing)
 
