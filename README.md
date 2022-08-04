@@ -38,6 +38,13 @@ Launch file (cuDNN and TensorRT support):
 roslaunch lidar_point_pillars lidar_point_pillars.launch pfe_onnx_file:=/PATH/TO/FILE.onnx rpn_onnx_file:=/PATH/TO/FILE.onnx pp_config:=/PATH/TO/pp_multihead.yaml input_topic:=/points_raw 
 ```
 
+## Test launch
+
+```
+roslaunch test_point_pillars test_point_pillars.launch
+```
+nuscenes test data download: [nuscenes_10sweeps_points.txt](https://drive.google.com/file/d/1KD0LT0kzcpGUysUu__dfnfYnHUW62iwN/view?usp=sharing)
+
 ## Models Files:
 From: https://github.com/hova88/PointPillars_MultiHead_40FPS
 
