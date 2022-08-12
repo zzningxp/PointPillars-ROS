@@ -44,7 +44,7 @@ VisualizeDetectedObjects::VisualizeDetectedObjects() : arrow_height_(0.5), label
   private_nh_.param<double>("arrow_speed_threshold", arrow_speed_threshold_, 0.25);
   ROS_INFO("[%s] arrow_speed_threshold: %.2f", __APP_NAME__, arrow_speed_threshold_);
 
-  private_nh_.param<double>("marker_display_duration", marker_display_duration_, 0.2);
+  private_nh_.param<double>("marker_display_duration", marker_display_duration_, 0.8);
   ROS_INFO("[%s] marker_display_duration: %.2f", __APP_NAME__, marker_display_duration_);
 
   std::vector<double> color;
@@ -145,7 +145,7 @@ void VisualizeDetectedObjects::DetectedObjectsCallback(const autoware_msgs::Dete
   arrow_markers = ObjectsToArrows(in_objects);
   polygon_hulls = ObjectsToHulls(in_objects);
   bounding_boxes = ObjectsToBoxes(in_objects);
-  object_models = ObjectsToModels(in_objects);
+  // object_models = ObjectsToModels(in_objects);
   centroid_markers = ObjectsToCentroids(in_objects);
 
   visualization_markers.markers.insert(visualization_markers.markers.end(),
@@ -453,6 +453,10 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
                                 (object.pose.position.y * object.pose.position.y));
       std::string distance_str = distance_stream.str() + " m";
       label_marker.text += distance_str;
+
+      std::stringstream score_stream;
+      score_stream << std::fixed << std::setprecision(3) << object.score; 
+      label_marker.text += "\n(" + score_stream.str() + ")";
 
       if (object.velocity_reliable)
       {

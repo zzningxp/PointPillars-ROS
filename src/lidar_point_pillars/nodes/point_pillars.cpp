@@ -146,7 +146,8 @@ PointPillars::PointPillars(const float score_threshold,
     postprocess_cuda_ptr_.reset(
       new PostprocessCuda(kNumThreads,
                           float_min, float_max, 
-                          kNumClass,kNumAnchorPerCls,
+                          kNumClass, 
+                          kNumAnchorPerCls,
                           kMultiheadLabelMapping,
                           score_threshold_, 
                           nms_overlap_threshold_,
@@ -170,31 +171,47 @@ void PointPillars::DeviceMemoryMalloc() {
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_cumsum_along_x_), kNumIndsForScan * kNumIndsForScan * sizeof(int))); // [1024 , 1024]
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_cumsum_along_y_), kNumIndsForScan * kNumIndsForScan * sizeof(int)));// [1024 , 1024]
 
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_pfe_gather_feature_),
-                        kMaxNumPillars * kMaxNumPointsPerPillar *
-                            kNumGatherPointFeature * sizeof(float)));
+    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_pfe_gather_feature_), kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature * sizeof(float)));
+    // std::cout << "dev_pfe_gather_feature_ " << kMaxNumPillars  << " x " << kMaxNumPointsPerPillar  << " x " << kNumGatherPointFeature  << " x " << sizeof(float) << " = "
+    //             << kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature * sizeof(float) << std::endl;
     // for trt inference
     // create GPU buffers and a stream
 
-    GPU_CHECK(
-        cudaMalloc(&pfe_buffers_[0], kMaxNumPillars * kMaxNumPointsPerPillar *
-                                        kNumGatherPointFeature * sizeof(float)));
+    GPU_CHECK(cudaMalloc(&pfe_buffers_[0], kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature * sizeof(float)));
     GPU_CHECK(cudaMalloc(&pfe_buffers_[1], kMaxNumPillars * 64 * sizeof(float)));
 
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[0],  kRpnInputSize * sizeof(float)));
+    // std::cout << "pfe_buffers_[0] " << kMaxNumPillars  << " x " << kMaxNumPointsPerPillar  << " x " << kNumGatherPointFeature  << " x " << sizeof(float) << " = "
+    //             << kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature * sizeof(float) << std::endl;
+    // std::cout << "pfe_buffers_[1] " << kMaxNumPillars  << " x " << 64  << " x " << sizeof(float) << " = "
+    //             << kMaxNumPillars * 64 * sizeof(float) << std::endl;
 
+    // for scatter kernel
+    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_scattered_feature_), kNumThreads * kGridYSize * kGridXSize * sizeof(float)));
+
+    // std::cout << "dev_scattered_feature_ " << kNumThreads  << " x " << kGridYSize  << " x " << kGridXSize  << " x " << sizeof(float) << " = "
+    //             << kNumThreads * kGridYSize * kGridXSize * sizeof(float) << std::endl;
+
+    GPU_CHECK(cudaMalloc(&rpn_buffers_[0],  kRpnInputSize * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[1],  kNumAnchorPerCls  * sizeof(float)));  //classes
     GPU_CHECK(cudaMalloc(&rpn_buffers_[2],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[3],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[4],  kNumAnchorPerCls  * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[5],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[6],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
-    
     GPU_CHECK(cudaMalloc(&rpn_buffers_[7],  kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature * sizeof(float))); //boxes
 
-    // for scatter kernel
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_scattered_feature_),
-                        kNumThreads * kGridYSize * kGridXSize * sizeof(float)));
+    // std::cout << "rpn_buffers_[0] " << kRpnInputSize  << " x " << sizeof(float) << " = "
+    //             << kRpnInputSize * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[1] " << kNumAnchorPerCls   << " x " << sizeof(float) << " = "
+    //             << kNumAnchorPerCls  * sizeof(float) << std::endl;  //classes
+    // std::cout << "rpn_buffers_[2] " << kNumAnchorPerCls  * 2 * 2 * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[3] " << kNumAnchorPerCls  * 2 * 2 * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[4] " << kNumAnchorPerCls  * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[5] " << kNumAnchorPerCls  * 2 * 2 * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[6] " << kNumAnchorPerCls  * 2 * 2 * sizeof(float) << std::endl;
+    // std::cout << "rpn_buffers_[7] " << kNumAnchorPerCls  << " x " << kNumClass  << " x " << kNumOutputBoxFeature  << " x " << sizeof(float) << " = "
+    //             << kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature * sizeof(float) << std::endl; //boxes
+
 
     // for filter
     host_box_ =  new float[kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature]();
@@ -271,8 +288,8 @@ void PointPillars::InitTRT(const bool use_onnx) {
       std::cerr << "Failed to load ONNX file.";
   }
 
-//   EngineToTRTFile(pfe_file_ + ".trt", &pfe_engine_);
-//   EngineToTRTFile(backbone_file_ + ".trt", &backbone_engine_);
+  // EngineToTRTFile(pfe_file_ + ".trt", &pfe_engine_);
+  // EngineToTRTFile(backbone_file_ + ".trt", &backbone_engine_);
   // create execution context from the engine
   pfe_context_ = pfe_engine_->createExecutionContext();
   backbone_context_ = backbone_engine_->createExecutionContext();
@@ -379,12 +396,12 @@ void PointPillars::doInference(const float* in_points_array,
     cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
     float* dev_points;
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points),
-                        in_num_points * kNumPointFeature * sizeof(float))); // in_num_points , 5
+    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kNumPointFeature * sizeof(float))); // in_num_points , 5
     GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kNumPointFeature * sizeof(float)));
     GPU_CHECK(cudaMemcpy(dev_points, in_points_array,
                         in_num_points * kNumPointFeature * sizeof(float),
                         cudaMemcpyHostToDevice));
+    // std::cout << "dev_points " << in_num_points * kNumPointFeature * sizeof(float) << std::endl; // in_num_points , 5
     
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;
@@ -427,6 +444,7 @@ void PointPillars::doInference(const float* in_points_array,
     backbone_context_->enqueueV2(rpn_buffers_, stream, nullptr);
     cudaDeviceSynchronize();
     auto backbone_end = std::chrono::high_resolution_clock::now();
+    // std::cout << "backbone_context_->enqueueV2" << std::endl;
 
     // [STEP 6]: postprocess (multihead)
     auto postprocess_start = std::chrono::high_resolution_clock::now();

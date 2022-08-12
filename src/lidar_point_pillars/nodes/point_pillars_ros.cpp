@@ -92,9 +92,9 @@ void PointPillarsROS::pubDetectedObject(
   int num_objects = detections.size() / OUTPUT_NUM_BOX_FEATURE_;
   for (size_t i = 0; i < num_objects; i++)
   {
-    if (out_labels[i] > 0){
-      continue;
-    }
+    // if (out_labels[i] > 0){
+    //   continue;
+    // }
     autoware_msgs::DetectedObject object;
     object.header = in_header;
     object.valid = true;
@@ -122,6 +122,7 @@ void PointPillarsROS::pubDetectedObject(
     object.dimensions.z = detections[i * OUTPUT_NUM_BOX_FEATURE_ + 5];
 
     object.label = point_pillars_ptr_->kAnchorNames[out_labels[i]];
+    object.score = out_scores[i];
 
     objects.objects.push_back(object);
   }
