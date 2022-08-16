@@ -5,7 +5,7 @@ This repo implements https://github.com/hova88/PointPillars_MultiHead_40FPS into
 
 However, multihead 40FPS models is originally tested on 3080Ti. It takes about 700ms one frame on Nvidia TX1.
 
-I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 100ms on TX1, and I will release ONNX models recently.
+I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1, and I will release ONNX models recently.
 
 
 # Requirements (My Environment)
@@ -50,12 +50,7 @@ roslaunch test_point_pillars test_point_pillars.launch
 ```
 nuscenes test data download: [nuscenes_10sweeps_points.txt](https://drive.google.com/file/d/1KD0LT0kzcpGUysUu__dfnfYnHUW62iwN/view?usp=sharing)
 
-## Models Files:
 From: https://github.com/hova88/PointPillars_MultiHead_40FPS
-
-[cbgs_pp_multihead_pfe.onnx](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing)
-
-[cbgs_pp_multihead_backbone.onnx](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing)
 ```
   Preprocess    7.48567  ms
   Pfe           266.516  ms
@@ -65,6 +60,15 @@ From: https://github.com/hova88/PointPillars_MultiHead_40FPS
   Summary       681.325  ms
 ```
 
+## Models Files:
 Faster ONNX models on TX1:
+* zz0809_512_e50 model is with the same config file as cbgs model, and the evaluation data is re-tested by the same eval benchmark.
+* zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
 
-Will be released recently.
+|                                             | infer time |resolution| training data | mean_ap | nd_score  | car ap | ped ap | truck ap| download |
+|---------------------------------------------|:----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
+| cbgs_pp_multihead_pfe                       | ~700ms     |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) |
+| zz0809_512_e50 |~700ms|64x512x512|nusc tr-v|0.460|0.524|0.818|0.733|0.507|[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|
+| zz0808_256_e50 |~250ms|64x256x256|nusc tr-v|0.351|0.454|0.781|0.571|0.427|[pfe](https://drive.google.com/file/d/1pxsP5fhQG0XzpU0yzJOjRcO3ru_JM5Vn/view?usp=sharing) [backbone](https://drive.google.com/file/d/1Pb8xZ_55oo95SDSzS1KHvQ_MvnS-X1Iv/view?usp=sharing)|
+
+More models will be released recently.
