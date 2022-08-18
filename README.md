@@ -60,6 +60,13 @@ From: https://github.com/hova88/PointPillars_MultiHead_40FPS
   Summary       681.325  ms
 ```
 
+## Test Rosbag:
+
+I use [nuscenes2bag](https://github.com/clynamen/nuscenes2bag) to create some test rosbag [nu0061 download password:s2eh](https://pan.baidu.com/s/1vqKvJ8jRwxEZKuuFBCig2w).
+
+To use this rosbag, you shoulde change input_topic to `/lidar_top` , and use src/rviz/nuscenes.rviz for visualization.
+
+
 ## Models Files:
 Faster ONNX models on TX1:
 * zz0809_512_e50 model is with the same config file as cbgs model, and the evaluation data is re-tested by the same eval benchmark.
