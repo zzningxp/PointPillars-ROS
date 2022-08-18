@@ -62,10 +62,11 @@ From: https://github.com/hova88/PointPillars_MultiHead_40FPS
 
 ## Test Rosbag:
 
-I use [nuscenes2bag](https://github.com/clynamen/nuscenes2bag) to create some test rosbag [nu0061 download password:s2eh](https://pan.baidu.com/s/1vqKvJ8jRwxEZKuuFBCig2w).
+I use [nuscenes2bag](https://github.com/clynamen/nuscenes2bag) to create some test rosbag [nu0061 all 19s 5.5G, download password: s2eh](https://pan.baidu.com/s/1vqKvJ8jRwxEZKuuFBCig2w), [nu0061 laser and tf only 19s 209M, download password: m7wh](https://pan.baidu.com/s/11geDn_kD2LuWf2R4VqdbEg).
 
 To use this rosbag, you shoulde change input_topic to `/lidar_top` , and use src/rviz/nuscenes.rviz for visualization.
 
+Usually, I use `rosbag play r 0.1 ` for more play time.
 
 ## Models Files:
 Faster ONNX models on TX1:
