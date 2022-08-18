@@ -5,7 +5,7 @@ This repo implements https://github.com/hova88/PointPillars_MultiHead_40FPS into
 
 However, multihead 40FPS models is originally tested on 3080Ti. It takes about 700ms one frame on Nvidia TX1.
 
-I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1, and I will release ONNX models recently.
+I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1.
 
 
 # Requirements (My Environment)
