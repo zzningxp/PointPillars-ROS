@@ -51,3 +51,4 @@ qtcreator-*
 CATKIN_IGNORE
 src/pretrain_models
 src/test_point_pillars/data
+src/.DS_Store
