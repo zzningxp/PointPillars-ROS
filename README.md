@@ -107,7 +107,7 @@ Faster ONNX models on TX1:
 * zz0809_512_e50 model is with the same config file as cbgs model, and the evaluation data is re-tested by the same eval benchmark.
 * zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
 
-|                                             | Tx1 time | Xavier time |resolution| training data | mean_ap | nd_score  | car ap | ped ap | truck ap| download |
+|                                             | Tx1 time | Xavier time |resolution| training data | mean ap | nd score  | car ap | ped ap | truck ap| download |
 |---------------------------------------------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
 | cbgs_pp_multihead_pfe                       | ~700ms   | ~140ms |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) |
 | zz0809_512_e50 |~700ms| ~140ms |64x512x512|nusc tr-v|0.460|0.524|0.818|0.733|0.507|[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|

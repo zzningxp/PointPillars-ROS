@@ -1,4 +1,4 @@
-pp_path=
+pp_path=`pwd`/src
 #model_prefix=z0809_e50 ## 512x512
 model_prefix=z0808_e50 ## 256x256
 
