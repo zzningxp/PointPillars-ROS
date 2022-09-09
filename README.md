@@ -3,15 +3,20 @@ A 3D detection Pointpillars ROS deployment on Nvidia Jetson TX1/TX2
 
 This repo implements https://github.com/hova88/PointPillars_MultiHead_40FPS into Autoware lidar_point_pillars framework https://github.com/autowarefoundation/autoware_ai_perception/tree/master/lidar_point_pillars.
 
-However, multihead 40FPS models is originally tested on 3080Ti. It takes about 700ms one frame on Nvidia TX1.
+However, multihead 40FPS models is originally tested on 3080Ti. 
+It takes about 700ms one frame on Nvidia TX1, while 140ms on Nvidia Xavier.
 
-I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1.
+I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1 (model: zz0808_256_e50).
 
 # Requirements 
-## My Environment TX1
-```
+## My Environment 
+
 Ubuntu 18.04
+
 ROS Melodic
+
+### TX1
+```
 
 jetson_release
  - NVIDIA Jetson TX1
@@ -27,7 +32,7 @@ jetson_release
    * VPI: ii libnvvpi1 1.0.15 arm64 NVIDIA Vision Programming Interface library
    * Vulkan: 1.2.70
 ```
-## My Environment Xavier
+### Xavier
 ```
  - NVIDIA Jetson AGX Xavier [16GB]
    * Jetpack 4.5.1 [L4T 32.5.1]
@@ -50,10 +55,17 @@ sudo apt-get install ros-melodic-jsk-recognition-msgs
 sudo apt-get install ros-melodic-jsk-rviz-plugins
 ```
 
+Need OpenCV compiled with CUDA.
+
 # Usage
 ## How to compile
 
 Simply, use catkin_make build up the whole project.
+
+Add project to runtime environment.
+```
+source devel/setup.bash
+```
 
 ## How to launch
 Launch file (cuDNN and TensorRT support): 
@@ -66,7 +78,9 @@ roslaunch lidar_point_pillars lidar_point_pillars.launch pfe_onnx_file:=/PATH/TO
 
 `score_threshold, nms_overlap_threshold, etc` are optional to change the runtime parameters.
 
-Or, simply, use launch.sh to run.
+## Or, simply, 
+
+Use `launch.sh` to run.
 
 ## Test launch
 
@@ -77,7 +91,7 @@ nuscenes test data download: [nuscenes_10sweeps_points.txt](https://drive.google
 
 From: https://github.com/hova88/PointPillars_MultiHead_40FPS
 
-Tx1:
+Tx1 (single test):
 ```
   Preprocess    7.48567  ms
   Pfe           266.516  ms
@@ -87,9 +101,14 @@ Tx1:
   Summary       681.325  ms
 ```
 
-Xavier:
+Xavier (single test):
 ```
-  Summary       141.752  ms
+  Preprocess    2.15862  ms
+  Pfe           46.2593  ms
+  Scatter       0.54678  ms
+  Backbone      80.7096  ms
+  Postprocess   11.3462  ms
+  Summary       141.034  ms
 ```
 
 ## Test Rosbag:
@@ -108,8 +127,8 @@ Faster ONNX models on TX1:
 * zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
 
 |                                             | Tx1 time | Xavier time |resolution| training data | mean ap | nd score  | car ap | ped ap | truck ap| download |
-|---------------------------------------------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
-| cbgs_pp_multihead_pfe                       | ~700ms   | ~140ms |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) |
+|-----------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
+| cbgs_ppmh | ~700ms   | ~140ms |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) |
 | zz0809_512_e50 |~700ms| ~140ms |64x512x512|nusc tr-v|0.460|0.524|0.818|0.733|0.507|[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|
 | zz0808_256_e50 |~250ms| ~110ms |64x256x256|nusc tr-v|0.351|0.454|0.781|0.571|0.427|[pfe](https://drive.google.com/file/d/1pxsP5fhQG0XzpU0yzJOjRcO3ru_JM5Vn/view?usp=sharing) [backbone](https://drive.google.com/file/d/1Pb8xZ_55oo95SDSzS1KHvQ_MvnS-X1Iv/view?usp=sharing)|
 
