@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>autoware_build_flags</name>
+  <name>build_flags</name>
   <version>1.12.0</version>
   <description>Common build flags for Autoware.</description>
 

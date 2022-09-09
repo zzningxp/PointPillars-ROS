@@ -6,7 +6,7 @@
   <maintainer email="cirpue49@yahoo.co.jp">Kosuke Murakami</maintainer>
   <license>Apache 2.0</license>
 
-  <buildtool_depend>autoware_build_flags</buildtool_depend>
+  <buildtool_depend>build_flags</buildtool_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>autoware_msgs</depend>

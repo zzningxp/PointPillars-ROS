@@ -4,7 +4,7 @@ project(lidar_point_pillars)
 # set flags for CUDA availability
 option(CUDA_AVAIL "CUDA available" OFF)
 find_package(CUDA)
-find_package(autoware_build_flags REQUIRED)
+find_package(build_flags REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 AW_CHECK_CUDA()

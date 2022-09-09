@@ -17,7 +17,6 @@ ROS Melodic
 
 ### TX1
 ```
-
 jetson_release
  - NVIDIA Jetson TX1
    * Jetpack 4.5.1 [L4T 32.5.1]
