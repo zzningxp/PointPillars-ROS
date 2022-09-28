@@ -179,7 +179,7 @@ class PointPillars {
     float* dev_pfe_gather_feature_;
     void* pfe_buffers_[2];
     //variable for doPostprocessCudaMultiHead
-    void* rpn_buffers_[8];
+    void* rpn_buffers_[100];
     
     std::vector<float*> rpn_box_output_; 
     std::vector<float*> rpn_cls_output_;
@@ -189,6 +189,14 @@ class PointPillars {
     float* host_box_;
     float* host_score_;
     int*   host_filtered_count_;
+
+    int kRPNHeadNum;
+    std::vector<int> kRPNClsPerHead;
+    std::vector<int> kRPNHeadCount;
+    std::vector<int> kRPNHeadStride0;
+    std::vector<int> kRPNHeadStride;
+    std::vector<int> kRPNHeadOffset;
+    int kRPNHeadSpaceCount;
 
     // float* dev_filtered_box_;
     // float* dev_filtered_score_;

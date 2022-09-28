@@ -62,6 +62,9 @@ class PostprocessCuda {
     const int num_box_corners_;
     const int num_input_box_feature_;
     const int num_output_box_feature_;
+    const std::vector<int> kRPNHeadCount_;
+    const std::vector<int> kRPNHeadStride_;
+    const std::vector<int> kRPNHeadOffset_;
     const std::vector<std::vector<int>> multihead_label_mapping_;
     // end initializer list
 
@@ -94,7 +97,11 @@ class PostprocessCuda {
                   const int nms_post_maxsize,
                   const int num_box_corners,
                   const int num_input_box_feature, 
-                  const int num_output_box_feature);
+                  const int num_output_box_feature,
+                  const std::vector<int> kRPNHeadCount,
+                  const std::vector<int> kRPNHeadStride,
+                  const std::vector<int> kRPNHeadOffset
+                  );
   ~PostprocessCuda(){}
 
   /**
@@ -110,19 +117,9 @@ class PostprocessCuda {
    * @details dev_* represents device memory allocated variables
    */
   void DoPostprocessCuda(
-    float* cls_pred_0,
-    float* cls_pred_12,
-    float* cls_pred_34,
-    float* cls_pred_5,
-    float* cls_pred_67,
-    float* cls_pred_89,
-    
-    const float* box_preds,
-
     float* host_box, 
     float* host_score, 
     int* host_filtered_count,
-    
     
     std::vector<float>& out_detection, std::vector<int>& out_label , std::vector<float>& out_score);
 };

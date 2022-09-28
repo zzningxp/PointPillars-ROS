@@ -94,7 +94,10 @@ PostprocessCuda::PostprocessCuda(const int num_threads, const float float_min, c
     const int nms_pre_maxsize, const int nms_post_maxsize,
     const int num_box_corners, 
     const int num_input_box_feature,
-    const int num_output_box_feature)
+    const int num_output_box_feature,
+    const std::vector<int> kRPNHeadCount,
+    const std::vector<int> kRPNHeadStride,
+    const std::vector<int> kRPNHeadOffset)
 : num_threads_(num_threads),
   float_min_(float_min),
   float_max_(float_max),
@@ -107,7 +110,10 @@ PostprocessCuda::PostprocessCuda(const int num_threads, const float float_min, c
   nms_post_maxsize_(nms_post_maxsize),
   num_box_corners_(num_box_corners),
   num_input_box_feature_(num_input_box_feature),
-  num_output_box_feature_(num_output_box_feature) {
+  num_output_box_feature_(num_output_box_feature),
+  kRPNHeadCount_(kRPNHeadCount),
+  kRPNHeadStride_(kRPNHeadStride),
+  kRPNHeadOffset_(kRPNHeadOffset) {
     nms_cuda_ptr_.reset(
     new NmsCuda(num_threads_, num_box_corners_, nms_overlap_threshold_));
 
@@ -115,47 +121,17 @@ PostprocessCuda::PostprocessCuda(const int num_threads, const float float_min, c
 
 
 void PostprocessCuda::DoPostprocessCuda(
-    float* cls_pred_0,
-    float* cls_pred_12,
-    float* cls_pred_34,
-    float* cls_pred_5,
-    float* cls_pred_67,
-    float* cls_pred_89,
-
-    const float* box_preds,
-   
     float* host_box, 
     float* host_score, 
     int* host_filtered_count,
 
     std::vector<float>& out_detection, std::vector<int>& out_label , std::vector<float>& out_score) {
     
-    // class_map as {0, 12 , 34 , 5 ,67 ,89}
-    // class_map can be designed as a variable(list , dict , ...), which can flexibly adapt to 
-    // the changes of openpcdet's multihead structure
-    // ......
-    // but, i think the {A,BC,D,EF ,...}-like-head-structure is meaningless 
-    // This design does not simplify the calculation, but increases the amount of data
-    // so ,i prefer to use {A,B,C,D,E,F,...}-like-head-structure to do multi task
-    // For TensorRT , the same structure head should be layer-fused more efficiently~! 
-    
-    
     //num_anchor_per_cls_ = 32768
-    GPU_CHECK(cudaMemcpy(&host_score[0 * num_anchor_per_cls_], cls_pred_0, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[1 * num_anchor_per_cls_], cls_pred_12, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[5 * num_anchor_per_cls_], cls_pred_34, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[9 * num_anchor_per_cls_], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[10 * num_anchor_per_cls_], cls_pred_67, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[14 * num_anchor_per_cls_], cls_pred_89, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    int stride[10] = {0 , 1 , 1 , 5 , 5 , 9 , 10 , 10 , 14 , 14};
-    int offset[10] = {0 , 0 , 1 , 0 , 1 , 0 , 0 , 1 , 0 , 1};
-
-    GPU_CHECK(cudaMemcpy(host_box, box_preds, num_class_ * num_anchor_per_cls_ * num_output_box_feature_ * sizeof(float), cudaMemcpyDeviceToHost));
     
     for (int class_idx = 0; class_idx < num_class_; ++ class_idx) {  // hardcode for class_map as {0, 12 , 34 , 5 ,67 ,89}
         // init parameter
         host_filtered_count[class_idx] = 0;
-
 
         // sigmoid filter
         float host_filtered_score[nms_pre_maxsize_]; // 1000
@@ -165,13 +141,13 @@ void PostprocessCuda::DoPostprocessCuda(
 
             float score_upper = 0;
             float score_lower = 0;
-            if (class_idx == 0 || class_idx == 5 ) {
-                score_upper =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_ + anchor_idx ])); // sigmoid function
+            if (kRPNHeadCount_[class_idx] == 1) {
+                score_upper =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_ + anchor_idx ])); // sigmoid function
 
             }
             else {
-                score_upper =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_  + anchor_idx * 2  + offset[class_idx]]));
-                score_lower =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_  + (num_anchor_per_cls_ + anchor_idx) * 2 + offset[class_idx]]));
+                score_upper =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_  + anchor_idx * 2  + kRPNHeadOffset_[class_idx]]));
+                score_lower =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_  + (num_anchor_per_cls_ + anchor_idx) * 2 + kRPNHeadOffset_[class_idx]]));
                 // printf("up , low : %f ,%f \n", score_upper , score_lower);
             }
 
@@ -275,39 +251,3 @@ void PostprocessCuda::DoPostprocessCuda(
         GPU_CHECK(cudaFree(dev_sorted_filtered_score));
     }
 }
-
-
-
-
-
-// void PostprocessCuda::DoPostprocessCuda(
-//     float* cls_pred_0,
-//     float* cls_pred_12,
-//     float* cls_pred_34,
-//     float* cls_pred_5,
-//     float* cls_pred_67,
-//     float* cls_pred_89,
-
-//     const float* box_preds,
-   
-//     float* dev_filtered_box, 
-//     float* dev_filtered_score, 
-//     int* dev_filter_count,
-//     std::vector<float>& out_detection, std::vector<int>& out_label , std::vector<float>& out_score) {
-
-
-//     // GPU_CHECK(cudaMemcpy(&host_score[0 * 32768], cls_pred_0, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[1 * 32768], cls_pred_12, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[2 * 32768], cls_pred_34, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[3 * 32768], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[4 * 32768], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[5 * 32768], cls_pred_67, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-//     // GPU_CHECK(cudaMemcpy(&host_score[6 * 32768], cls_pred_89, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-
-//     // GPU_CHECK(cudaMemcpy(host_box, box_preds, num_class_ * num_anchor_per_cls_ * num_input_box_feature_ * sizeof(float), cudaMemcpyDeviceToHost));
-
-
-
-
-// }
-

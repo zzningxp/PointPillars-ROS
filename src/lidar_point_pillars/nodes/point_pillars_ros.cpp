@@ -121,11 +121,24 @@ void PointPillarsROS::pubDetectedObject(
     object.dimensions.y = detections[i * OUTPUT_NUM_BOX_FEATURE_ + 3];
     object.dimensions.z = detections[i * OUTPUT_NUM_BOX_FEATURE_ + 5];
 
+    // std::cout << 
+    //     object.pose.position.x << " " <<
+    //     object.pose.position.y << " " <<
+    //     object.pose.position.z << " " <<
+    //     object.pose.orientation.x << " " <<
+    //     object.pose.orientation.y << " " <<
+    //     object.pose.orientation.z << " " <<
+    //     object.pose.orientation.w << " " <<
+    //     object.dimensions.x << " " <<
+    //     object.dimensions.y << " " <<
+    //     object.dimensions.z << " " << std::endl;
+
     object.label = point_pillars_ptr_->kAnchorNames[out_labels[i]];
     object.score = out_scores[i];
 
     objects.objects.push_back(object);
   }
+  // std::cout << "publish objects num: " << objects.objects.size() << std::endl;
   pub_objects_.publish(objects);
 }
 
@@ -133,6 +146,7 @@ void PointPillarsROS::getBaselinkToLidarTF(const std::string& target_frameid)
 {
   try
   {
+    std::cout << BASELINK_FRAME_ << " " << target_frameid << std::endl;
     tf_listener_.waitForTransform(BASELINK_FRAME_, target_frameid, ros::Time(0), ros::Duration(1.0));
     tf_listener_.lookupTransform(BASELINK_FRAME_, target_frameid, ros::Time(0), baselink2lidar_);
     analyzeTFInfo(baselink2lidar_);
@@ -140,6 +154,7 @@ void PointPillarsROS::getBaselinkToLidarTF(const std::string& target_frameid)
   }
   catch (tf::TransformException ex)
   {
+    // std::cout << "getBaselinkToLidarTF TransformException" << std::endl;
     ROS_ERROR("%s", ex.what());
   }
 }
@@ -179,6 +194,8 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_pc_ptr(new pcl::PointCloud<pcl::PointXYZI>);
   pcl::fromROSMsg(*msg, *pcl_pc_ptr);
 
+  // std::cout << " " << baselink_support_ << " " << has_subscribed_baselink_ << std::endl;
+
   if (baselink_support_)
   {
     if (!has_subscribed_baselink_)
@@ -210,6 +227,10 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   point_pillars_ptr_->doInference(points_array, pcl_pc_ptr->size(), &out_detection, &out_labels, &out_scores);
   double t2 = ros::Time::now().toSec();
 
+  // for (int i = 0; i < NUM_POINT_FEATURE_; i++){
+  //   std::cout << out_detection[i] << "\t";
+  // }
+  // std::cout << out_labels[0] << out_scores[0] << std::endl;
   // for (int i = 0; i < out_detection.size()/OUTPUT_NUM_BOX_FEATURE_; i++){
   //   std::cout << out_labels[i] << "\t";
   // }
