@@ -249,8 +249,10 @@ PointPillars::~PointPillars() {
     GPU_CHECK(cudaFree(pfe_buffers_[1]));
 
     GPU_CHECK(cudaFree(rpn_buffers_[0]));
-    GPU_CHECK(cudaFree(rpn_buffers_[1]));
-    GPU_CHECK(cudaFree(rpn_buffers_[2]));
+    for (int i = 0; i < kRPNHeadNum; ++i){
+        GPU_CHECK(cudaFree(rpn_buffers_[i]));
+    }
+    GPU_CHECK(cudaFree(rpn_buffers_[kRPNHeadNum + 1]));
     pfe_context_->destroy();
     backbone_context_->destroy();
     pfe_engine_->destroy();
@@ -462,7 +464,8 @@ void PointPillars::doInference(const float* in_points_array,
         GPU_CHECK(cudaMemcpy(&host_score_[kRPNHeadStride0[i] * kNumAnchorPerCls], reinterpret_cast<float*>(rpn_buffers_[i + 1]), 
             kNumAnchorPerCls * kRPNClsPerHead[i] * kRPNClsPerHead[i] * sizeof(float), cudaMemcpyDeviceToHost));
     }
-    GPU_CHECK(cudaMemcpy(host_box_, reinterpret_cast<float*>(rpn_buffers_[kRPNHeadNum + 1]), kNumClass * kNumAnchorPerCls * kNumOutputBoxFeature * sizeof(float), cudaMemcpyDeviceToHost));
+    GPU_CHECK(cudaMemcpy(host_box_, reinterpret_cast<float*>(rpn_buffers_[kRPNHeadNum + 1]), 
+        kNumClass * kNumAnchorPerCls * kNumOutputBoxFeature * sizeof(float), cudaMemcpyDeviceToHost));
 
     postprocess_cuda_ptr_->DoPostprocessCuda(
         host_box_, 

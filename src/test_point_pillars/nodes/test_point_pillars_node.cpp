@@ -6,7 +6,33 @@
 // headers in 3rd-part
 // #include "lidar_point_pillars/point_pillars.h"
 #include "point_pillars.h"
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
 using namespace std;
+
+int bin2Arrary( float* &points_array , string file_name , int num_feature)
+{
+  ifstream InFile;
+  InFile.open(file_name.data(), std::ios::binary );
+  assert(InFile.is_open());
+
+  float f;
+  std::vector<float> temp_points;
+  while (InFile.read(reinterpret_cast<char*>(&f), sizeof(float)))
+    temp_points.emplace_back(f);
+
+  points_array = new float[temp_points.size()];
+  for (int i = 0 ; i < temp_points.size() ; ++i) {
+    points_array[i] = temp_points[i];
+  }
+
+  InFile.close();  
+  std::cout << "bin size: " << temp_points.size() << " " << num_feature << std::endl;
+  return temp_points.size() / num_feature;
+  // printf("Done");
+};
 
 int Txt2Arrary( float* &points_array , string file_name , int num_feature = 4)
 {
@@ -45,10 +71,25 @@ void Boxes2Txt( std::vector<float> boxes , string file_name , int num_feature = 
 
 int main(int argc, char** argv)
 {
-  std::string pfe_file, backbone_file, pp_config; 
-  pfe_file = "/home/wheeltec/wheeltec_lidar_point_pillars_multihead/src/pretrain_models/cbgs_pp_multihead_pfe.onnx";
-  backbone_file = "/home/wheeltec/wheeltec_lidar_point_pillars_multihead/src/pretrain_models/cbgs_pp_multihead_backbone.onnx"; 
-  pp_config = "/home/wheeltec/wheeltec_lidar_point_pillars_multihead/src/lidar_point_pillars/cfgs/cbgs_pp_multihead.yaml";
+  ros::init(argc, argv, "test_point_pillars");
+  std::cout << "Test_point_pillars start" << std::endl;
+  std::string pfe_file, backbone_file, pp_config, input_bin, dataset_name; 
+  ros::param::param<std::string>("~pfe_onnx_file", pfe_file, "");
+  ros::param::param<std::string>("~backbone_file", backbone_file, "");
+  ros::param::param<std::string>("~pp_config", pp_config, "");
+  ros::param::param<std::string>("~input_bin", input_bin, "");
+  ros::param::param<std::string>("~dataset_name", dataset_name, "");
+
+  int points_stride;
+  if (dataset_name.compare("kitti") == 0)
+    points_stride = 4;
+  else 
+    points_stride = 5;
+
+  float* points_array;
+  int in_num_points;
+  in_num_points = bin2Arrary(points_array,input_bin,points_stride);
+  // std::cout << "PCL: " << input_bin << ": " << in_num_points << std::endl;
 
   int BoxFeature = 7;
   float ScoreThreshold = 0.1;
@@ -63,12 +104,8 @@ int main(int argc, char** argv)
     backbone_file,
     pp_config
   ));
-  std::string file_name = "/home/wheeltec/wheeltec_lidar_point_pillars_multihead/src/test_point_pillars/data/nuscenes_10sweeps_points.txt";
-  float* points_array;
-  int in_num_points;
-  in_num_points = Txt2Arrary(points_array,file_name,5);
  
-  for (int _ = 0 ; _ < 10 ; _++)
+  for (int _ = 0 ; _ < 4 ; _++)
   {
     std::vector<float> out_detections;
     std::vector<int> out_labels;
