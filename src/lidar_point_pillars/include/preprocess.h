@@ -54,6 +54,7 @@ class PreprocessPointsCuda {
     const int max_num_pillars_;
     const int max_num_points_per_pillar_;
     const int num_point_feature_;
+    const int num_gather_feature_;
     const int num_inds_for_scan_;
     const int grid_x_size_;
     const int grid_y_size_;
@@ -98,8 +99,9 @@ class PreprocessPointsCuda {
    * @param[in] min_z_range Minimum z value for point cloud
    * @details Captital variables never change after the compile
    */
-  PreprocessPointsCuda(const int num_threads, const int num_point_feature, const int num_inds_for_scan,
-                       const int max_num_pillars, const int max_points_per_pillar,  
+  PreprocessPointsCuda(const int num_threads, const int num_point_feature, 
+                       const int num_gather_feature,
+                       const int num_inds_for_scan, const int max_num_pillars, const int max_points_per_pillar,  
                        const int grid_x_size, const int grid_y_size, const int grid_z_size,  // grid size
                        const float pillar_x_size, const float pillar_y_size, const float pillar_z_size, //voxel size
                        const float min_x_range, const float min_y_range, const float min_z_range); // point cloud range
