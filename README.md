@@ -9,7 +9,11 @@ It takes about 700ms one frame on Nvidia TX1, while 140ms on Nvidia Xavier.
 I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1 (model: zz0808_256_e50).
 
 ## Update
-The post process of the original PointPillars_MultiHead_40FPS project, is **HARD CODED** into 10 heads in 6 groups.
+The post process of the original PointPillars_MultiHead_40FPS project, is **HARD CODED** some configuraion.
+
+1) Hard code 10 heads in 6 groups, I change it to read from yaml.
+2) Hard code feature_num of the pillar with 5, I change it to read from yaml (Kitti = 4, Nuscence = 5).
+3) Hard code gather_feature_num with 11, I change it to feature_num + 6.
 
 I change the post process to configurable mode.
 And now it supports different numbers of heads/groups config in YAML, while I update three heads yaml named pointpillar_kitti.
