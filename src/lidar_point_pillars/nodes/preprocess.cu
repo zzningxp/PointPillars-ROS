@@ -371,6 +371,8 @@ void PreprocessPointsCuda::DoPreprocessPointsCuda(
         dev_y_coors, dev_num_points_per_pillar, dev_sparse_pillar_map,
         max_num_pillars_, max_num_points_per_pillar_, grid_x_size_,
         num_inds_for_scan_);  
+    // INPUT: dev_pillar_count_histo_
+    // OUTPUT: dev_num_points_per_pillar, dev_x_coors, dev_y_coors, dev_sparse_pillar_map
 
     GPU_CHECK(cudaMemcpy(host_pillar_count, dev_pillar_count_, 1 * sizeof(int),
         cudaMemcpyDeviceToHost));
@@ -378,13 +380,16 @@ void PreprocessPointsCuda::DoPreprocessPointsCuda(
         dev_pillar_point_feature_in_coors_, dev_pillar_point_feature,
         dev_pillar_coors, dev_x_coors, dev_y_coors, dev_num_points_per_pillar,
         max_num_points_per_pillar_, num_point_feature_, grid_x_size_);
-    
+    // INPUT: dev_pillar_point_feature_in_coors_
+    // OUTPUT: dev_pillar_point_feature, dev_pillar_coors, dev_num_points_per_pillar
 
     dim3 mean_block(max_num_points_per_pillar_,3); //(32,3)
 
     pillar_mean_kernel<<<host_pillar_count[0],mean_block,64 * 3 *sizeof(float)>>>(
       dev_points_mean_  ,num_point_feature_, dev_pillar_point_feature, dev_num_points_per_pillar, 
         max_num_pillars_ , max_num_points_per_pillar_);
+    // INPUT: dev_pillar_point_feature, dev_num_points_per_pillar
+    // OUTPUT: dev_points_mean
 
     // dim3 mean_block(10,3); // Unrolling the Last Warp
     // make_pillar_mean_kernel<<<host_pillar_count[0], mean_block , 32 * 3 *sizeof(float)>>>(
@@ -398,6 +403,9 @@ void PreprocessPointsCuda::DoPreprocessPointsCuda(
       dev_pillar_point_feature, dev_num_points_per_pillar, dev_pillar_coors,
       dev_points_mean_,
       dev_pfe_gather_feature);
+    // INPUT: dev_pillar_point_feature, dev_num_points_per_pillar, dev_pillar_coors, dev_points_mean_,
+    // OUTPUT: dev_pfe_gather_feature_
+
 
     // DEVICE_SAVE<float>(dev_pillar_point_feature , \
     //     max_num_pillars_ * max_num_points_per_pillar_ * num_point_feature_ , "dev_pillar_point_feature");

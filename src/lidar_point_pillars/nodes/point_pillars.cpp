@@ -64,7 +64,9 @@ void PointPillars::InitParams()
     kNumClass = params["CLASS_NAMES"].size();
     kMaxNumPillars = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_NUMBER_OF_VOXELS"]["test"].as<int>();
     kMaxNumPointsPerPillar = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_POINTS_PER_VOXEL"].as<int>();
-    kNumPointFeature = 5; // [x, y, z, i,0]
+    // kNumPointFeature = 5; // [x, y, z, i, 0]
+    kNumPointFeature = 4; // [x, y, z, 0, 0]
+    kNumGatherPointFeature = kNumPointFeature + 6;
     kNumInputBoxFeature = 7;
     kNumOutputBoxFeature = params["MODEL"]["DENSE_HEAD"]["TARGET_ASSIGNER_CONFIG"]["BOX_CODER_CONFIG"]["code_size"].as<int>();
     kBatchSize = 1;

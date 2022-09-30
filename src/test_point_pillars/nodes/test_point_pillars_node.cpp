@@ -22,15 +22,19 @@ int bin2Arrary( float* &points_array , string file_name , int num_feature)
   std::vector<float> temp_points;
   while (InFile.read(reinterpret_cast<char*>(&f), sizeof(float)))
     temp_points.emplace_back(f);
+  InFile.close();  
 
-  points_array = new float[temp_points.size()];
-  for (int i = 0 ; i < temp_points.size() ; ++i) {
-    points_array[i] = temp_points[i];
+  int points_num = temp_points.size() / num_feature;
+
+  points_array = new float[points_num * 5];
+  for (int i = 0 ; i < points_num ; i++) {
+    points_array[i * 5] = temp_points[i * num_feature];
+    points_array[i * 5 + 1] = temp_points[i * num_feature + 1];
+    points_array[i * 5 + 2] = temp_points[i * num_feature + 2];
+    points_array[i * 5 + 3] = temp_points[i * num_feature + 3];
   }
 
-  InFile.close();  
-  std::cout << "bin size: " << temp_points.size() << " " << num_feature << std::endl;
-  return temp_points.size() / num_feature;
+  return points_num;
   // printf("Done");
 };
 
@@ -92,7 +96,8 @@ int main(int argc, char** argv)
   // std::cout << "PCL: " << input_bin << ": " << in_num_points << std::endl;
 
   int BoxFeature = 7;
-  float ScoreThreshold = 0.1;
+  float ScoreThreshold;
+  ros::param::param<float>("~score_threshold", ScoreThreshold, 0.4f);
   float NmsOverlapThreshold = 0.2;
   bool useOnnx = true;
   std::unique_ptr<PointPillars> point_pillars_ptr_;
@@ -105,7 +110,7 @@ int main(int argc, char** argv)
     pp_config
   ));
  
-  for (int _ = 0 ; _ < 4 ; _++)
+  for (int _ = 0 ; _ < 2 ; _++)
   {
     std::vector<float> out_detections;
     std::vector<int> out_labels;
@@ -120,11 +125,13 @@ int main(int argc, char** argv)
 
     std::cout << num_objects << std::endl;
     // for (int i = 0 ; i < out_detections.size() / BoxFeature ; ++i) {
-    //     for (int j = 0 ; j < BoxFeature ; ++j) {
-    //         std::cout << out_detections.at(i * BoxFeature + j) << " ";
-    //     }
-    //     std::cout << "\n";
+        int i = 0;
+        for (int j = 0 ; j < BoxFeature ; ++j) {
+            std::cout << out_detections.at(i * BoxFeature + j) << " ";
+        }
+        std::cout << "\n";
     // }
+    std::cout << "\n";
   }
 
   return 0;

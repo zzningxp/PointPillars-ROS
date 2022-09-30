@@ -4,11 +4,13 @@
   <arg name="pp_config"/>
   <arg name="input_bin"/>
   <arg name="dataset_name"/>
+  <arg name="score_threshold" default="0.4" />
   <node pkg="test_point_pillars" type="test_point_pillars" name="test_point_pillars" output="screen" >
     <param name="pfe_onnx_file" value="$(arg pfe_onnx_file)" />
     <param name="backbone_file" value="$(arg backbone_file)" />
     <param name="pp_config" value="$(arg pp_config)" />
     <param name="input_bin" value="$(arg input_bin)" />
     <param name="dataset_name" value="$(arg dataset_name)" />
+    <param name="score_threshold"   value="$(arg score_threshold)" />
   </node>
 </launch>
