@@ -119,13 +119,13 @@ PostprocessCuda::PostprocessCuda(const int num_threads, const float float_min, c
 
 }
 
-
 void PostprocessCuda::DoPostprocessCuda(
     float* host_box, 
     float* host_score, 
     int* host_filtered_count,
-
-    std::vector<float>& out_detection, std::vector<int>& out_label , std::vector<float>& out_score) {
+    std::vector<float>& out_detection, 
+    std::vector<int>& out_label, 
+    std::vector<float>& out_score) {
     
     //num_anchor_per_cls_ = 32768
     
@@ -150,7 +150,6 @@ void PostprocessCuda::DoPostprocessCuda(
                 score_lower =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_  + (num_anchor_per_cls_ + anchor_idx) * 2 + kRPNHeadOffset_[class_idx]]));
                 // printf("up , low : %f ,%f \n", score_upper , score_lower);
             }
-
 
             if (score_upper > score_threshold_ && host_filtered_count[class_idx] < nms_pre_maxsize_)  // filter out boxes which threshold less than score_threshold
             {
@@ -220,7 +219,6 @@ void PostprocessCuda::DoPostprocessCuda(
             host_sorted_filtered_score,
             host_filtered_count[class_idx]  * sizeof(float),
             cudaMemcpyHostToDevice));  
-
     
         int num_box_for_nms = min(nms_pre_maxsize_, host_filtered_count[class_idx]);
         long keep_inds[num_box_for_nms]; // index of kept box

@@ -7,9 +7,6 @@
 // #include "lidar_point_pillars/point_pillars.h"
 #include "point_pillars.h"
 
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
-
 using namespace std;
 
 int bin2Arrary( float* &points_array , string file_name , int num_feature)
@@ -125,12 +122,12 @@ int main(int argc, char** argv)
 
     std::cout << num_objects << std::endl;
     // for (int i = 0 ; i < out_detections.size() / BoxFeature ; ++i) {
-        int i = 0;
+    for (int i = 0 ; i < 5 ; ++i) {
         for (int j = 0 ; j < BoxFeature ; ++j) {
             std::cout << out_detections.at(i * BoxFeature + j) << " ";
         }
-        std::cout << "\n";
-    // }
+        std::cout << std::endl << out_labels[i] << std::endl << out_scores[i] << "\n";
+    }
     std::cout << "\n";
   }
 

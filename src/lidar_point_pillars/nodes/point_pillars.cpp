@@ -64,8 +64,25 @@ void PointPillars::InitParams()
     kNumClass = params["CLASS_NAMES"].size();
     kMaxNumPillars = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_NUMBER_OF_VOXELS"]["test"].as<int>();
     kMaxNumPointsPerPillar = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_POINTS_PER_VOXEL"].as<int>();
-    // kNumPointFeature = 5; // [x, y, z, i, 0]
-    kNumPointFeature = 4; // [x, y, z, 0, 0]
+    kInputPointFeature = 5;
+    std::string kDataSet = params["DATA_CONFIG"]["_BASE_CONFIG_"].as<std::string>();
+    std::string str;
+    std::string dataSetType;
+    str = "nuscenes";
+    if (kDataSet.find(str) != std::string::npos) {
+        kNumPointFeature = 5; // [x, y, z, i, 0], nuscenes
+        dataSetType = str;
+    } else {
+        str = "kitti";
+        if (kDataSet.find(str) != std::string::npos) {
+            kNumPointFeature = 4; // [x, y, z, 0, 0], kitti
+            dataSetType = str;
+        } else {
+            std::cout << "DataSet should include 'nuscenes','kitti' in DATA_CONFIG._BASE_CONFIG_" << std::endl;
+            exit(-1);
+        }
+    }
+    std::cout << "DataSet: " << dataSetType << std::endl;
     kNumGatherPointFeature = kNumPointFeature + 6;
     kNumInputBoxFeature = 7;
     kNumOutputBoxFeature = params["MODEL"]["DENSE_HEAD"]["TARGET_ASSIGNER_CONFIG"]["BOX_CODER_CONFIG"]["code_size"].as<int>();
@@ -157,6 +174,7 @@ PointPillars::PointPillars(const float score_threshold,
         kNumThreads,
         kMaxNumPillars,
         kMaxNumPointsPerPillar,
+        kInputPointFeature,
         kNumPointFeature,
         kNumGatherPointFeature,
         kNumIndsForScan,
@@ -220,8 +238,8 @@ void PointPillars::DeviceMemoryMalloc() {
     // std::cout << "dev_scattered_feature_ " << kNumThreads  << " x " << kGridYSize  << " x " << kGridXSize  << " x " << sizeof(float) << " = "
     //             << kNumThreads * kGridYSize * kGridXSize * sizeof(float) << std::endl;
 
-    std::cout << "kRpnInputSize kNumAnchorPerCls kRPNHeadSpaceCount " << kRpnInputSize << " " 
-            << kNumAnchorPerCls << " " << kRPNHeadSpaceCount << std::endl;
+    // std::cout << "kRpnInputSize kNumAnchorPerCls kRPNHeadSpaceCount " << kRpnInputSize << " " 
+    //         << kNumAnchorPerCls << " " << kRPNHeadSpaceCount << std::endl;
     GPU_CHECK(cudaMalloc(&rpn_buffers_[0],  kRpnInputSize * sizeof(float)));
     for (int i = 0; i < kRPNHeadNum; ++i) {
         GPU_CHECK(cudaMalloc(&rpn_buffers_[i+1],  kNumAnchorPerCls * kRPNClsPerHead[i] * kRPNClsPerHead[i] * sizeof(float)));  //classes
@@ -410,12 +428,11 @@ void PointPillars::doInference(const float* in_points_array,
     cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
     float* dev_points;
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kNumPointFeature * sizeof(float))); // in_num_points , 5
-    GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kNumPointFeature * sizeof(float)));
+    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kInputPointFeature * sizeof(float))); // in_num_points , 5
+    GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kInputPointFeature * sizeof(float)));
     GPU_CHECK(cudaMemcpy(dev_points, in_points_array,
-                        in_num_points * kNumPointFeature * sizeof(float),
+                        in_num_points * kInputPointFeature * sizeof(float),
                         cudaMemcpyHostToDevice));
-    // std::cout << "dev_points " << in_num_points * kNumPointFeature * sizeof(float) << std::endl; // in_num_points , 5
     
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;
