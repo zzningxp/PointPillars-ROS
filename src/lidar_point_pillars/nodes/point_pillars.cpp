@@ -458,6 +458,8 @@ void PointPillars::doInference(const float* in_points_array,
     auto pfe_end = std::chrono::high_resolution_clock::now();
     // DEVICE_SAVE<float>(reinterpret_cast<float*>(pfe_buffers_[1]),  kMaxNumPillars * 64 , "1_Model_pfe_output_buffers_[1]");
 
+    // std::cout << "pillar_count " << host_pillar_count_[0] << std::endl;
+
     // [STEP 4] : scatter pillar feature
     auto scatter_start = std::chrono::high_resolution_clock::now();
     scatter_cuda_ptr_->DoScatterCuda(
@@ -466,7 +468,7 @@ void PointPillars::doInference(const float* in_points_array,
     cudaDeviceSynchronize();
     auto scatter_end = std::chrono::high_resolution_clock::now();   
     // DEVICE_SAVE<float>(dev_scattered_feature_ ,  kRpnInputSize,"2_Model_backbone_input_dev_scattered_feature");
-
+    
     // [STEP 5] : backbone forward
     auto backbone_start = std::chrono::high_resolution_clock::now();
     GPU_CHECK(cudaMemcpyAsync(rpn_buffers_[0], dev_scattered_feature_,

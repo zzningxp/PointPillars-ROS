@@ -25,10 +25,9 @@ int bin2Arrary( float* &points_array , string file_name , int num_feature)
 
   points_array = new float[points_num * 5];
   for (int i = 0 ; i < points_num ; i++) {
-    points_array[i * 5] = temp_points[i * num_feature];
-    points_array[i * 5 + 1] = temp_points[i * num_feature + 1];
-    points_array[i * 5 + 2] = temp_points[i * num_feature + 2];
-    points_array[i * 5 + 3] = temp_points[i * num_feature + 3];
+    for (int j = 0; j < num_feature; j++) {
+      points_array[i * 5 + j] = temp_points[i * num_feature + j];
+    }
   }
 
   return points_num;
@@ -90,7 +89,8 @@ int main(int argc, char** argv)
   float* points_array;
   int in_num_points;
   in_num_points = bin2Arrary(points_array,input_bin,points_stride);
-  // std::cout << "PCL: " << input_bin << ": " << in_num_points << std::endl;
+  // in_num_points = Txt2Arrary(points_array,input_bin,points_stride);
+  std::cout << "PCL: " << input_bin << ": " << in_num_points << std::endl;
 
   int BoxFeature = 7;
   float ScoreThreshold;
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     int BoxFeature = 7;
     int num_objects = out_detections.size() / BoxFeature;
 
-    std::cout << num_objects << std::endl;
+    std::cout << "Num detected: " << num_objects << std::endl;
     // for (int i = 0 ; i < out_detections.size() / BoxFeature ; ++i) {
     for (int i = 0 ; i < 5 ; ++i) {
         for (int j = 0 ; j < BoxFeature ; ++j) {

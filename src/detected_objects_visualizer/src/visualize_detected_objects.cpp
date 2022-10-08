@@ -161,6 +161,10 @@ void VisualizeDetectedObjects::DetectedObjectsCallback(const autoware_msgs::Dete
   visualization_markers.markers.insert(visualization_markers.markers.end(),
                                        centroid_markers.markers.begin(), centroid_markers.markers.end());
 
+  // std::cout << "publish visualization_markers num: " 
+  //       << in_objects.objects.size() << " " 
+  //       << bounding_boxes.markers.size() << " " 
+  //       << visualization_markers.markers.size() << std::endl;
   publisher_markers_.publish(visualization_markers);
 
 }

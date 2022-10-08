@@ -128,8 +128,7 @@ void PostprocessCuda::DoPostprocessCuda(
     std::vector<float>& out_score) {
     
     //num_anchor_per_cls_ = 32768
-    
-    for (int class_idx = 0; class_idx < num_class_; ++ class_idx) {  // hardcode for class_map as {0, 12 , 34 , 5 ,67 ,89}
+    for (int class_idx = 0; class_idx < num_class_; ++ class_idx) {  
         // init parameter
         host_filtered_count[class_idx] = 0;
 
@@ -138,12 +137,10 @@ void PostprocessCuda::DoPostprocessCuda(
         float host_filtered_box[nms_pre_maxsize_ * 7]; // 1000 * 7
         for (size_t anchor_idx = 0 ; anchor_idx < num_anchor_per_cls_ ; anchor_idx++)
         {
-
             float score_upper = 0;
             float score_lower = 0;
             if (kRPNHeadCount_[class_idx] == 1) {
                 score_upper =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_ + anchor_idx ])); // sigmoid function
-
             }
             else {
                 score_upper =  1 / (1 + expf(-host_score[ kRPNHeadStride_[class_idx] * num_anchor_per_cls_  + anchor_idx * 2  + kRPNHeadOffset_[class_idx]]));
@@ -155,11 +152,12 @@ void PostprocessCuda::DoPostprocessCuda(
             {
                 host_filtered_score[host_filtered_count[class_idx]] = score_upper;
                 for (size_t dim_idx = 0 ; dim_idx < 7 ; dim_idx++) // dim_idx = {x,y,z,dx,dy,dz,yaw}
-                { 
+                {
                     host_filtered_box[host_filtered_count[class_idx] * 7 + dim_idx] \
                     =  host_box[ class_idx * num_anchor_per_cls_ * num_output_box_feature_ + anchor_idx * num_output_box_feature_ + dim_idx];
                 }
                 host_filtered_count[class_idx] += 1;
+                // std::cout << anchor_idx << " " << score_upper << std::endl;
             }
 
             if (score_lower > score_threshold_ && host_filtered_count[class_idx] < nms_pre_maxsize_)  // filter out boxes which threshold less than score_threshold
@@ -172,20 +170,27 @@ void PostprocessCuda::DoPostprocessCuda(
                 }
                 host_filtered_count[class_idx] += 1;
             }
-
         }
         // printf("host_filter_count[%d] = %d\n", class_idx , host_filtered_count[class_idx]);
-        if(host_filtered_count[class_idx] <= 0) continue;
+        if (host_filtered_count[class_idx] <= 0) 
+            continue;
 
         // sort boxes (topk)
         float host_sorted_filtered_box[host_filtered_count[class_idx] * 7];
         float host_sorted_filtered_score[host_filtered_count[class_idx]];
         int host_sorted_filtered_indexes[host_filtered_count[class_idx]];
-        for (int i = 0 ; i < host_filtered_count[class_idx] ; i++) {host_sorted_filtered_indexes[i] = i;}
-       
+        for (int i = 0 ; i < host_filtered_count[class_idx] ; i++) {
+            host_sorted_filtered_indexes[i] = i;
+        }
 
         quicksort_kernel(host_filtered_score , host_sorted_filtered_indexes , host_filtered_count[class_idx]);
         
+        // std::cout << "class id " << class_idx << " " << host_filtered_count[class_idx] << std::endl;
+        // for (int i = 0 ; i < host_filtered_count[class_idx] && i < 10; i++) {
+        //     std::cout << host_sorted_filtered_indexes[i] << " ";
+        // }
+        // std::cout << std::endl;
+
         for (int ith_box = 0 ; ith_box  < host_filtered_count[class_idx] ; ++ith_box) 
         {
             host_sorted_filtered_score[ith_box] = host_filtered_score[ith_box];
