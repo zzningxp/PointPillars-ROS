@@ -8,11 +8,20 @@ It takes about 700ms one frame on Nvidia TX1, while 140ms on Nvidia Xavier.
 
 I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models within 250ms on TX1 (model: zz0808_256_e50).
 
+## Features
+
+It support 11/10 gather feature point-pillar models.
+11 gfeature model is trained by Nuscenes Data by OpenPCDet, which has 5 basic features. 
+10 gfeature model is trained by Kitti Data by OpenPCDet, which has 4 basic features.
+
+However, the INPUT feature numbers of both dataset are 5. 
+So, different models can deal with different input from rosbags.
+
 ## Update
 The post process of the original PointPillars_MultiHead_40FPS project, is **HARD CODED** some configuraion.
 
 1) Hard coded 10 heads in 6 groups, I change it to read from yaml.
-2) Hard coded feature_num of the pillar with 5, I change it to read from yaml (Kitti = 4, Nuscence = 5).
+2) Hard coded feature_num of the pillar with 5, I change it to read from yaml (Kitti = 4, Nuscence = 5). 
 3) Hard coded gather_feature_num with 11, I change it to feature_num + 6.
 
 
@@ -132,11 +141,14 @@ More test rosbag, like kitti, carla or real data by myself, will be released rec
 Faster ONNX models on TX1:
 * zz0809_512_e50 model is with the same config file as cbgs model, and the evaluation data is re-tested by the same eval benchmark.
 * zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
+* z0927_kitti is trained by kitti dataset, with three classes. It has only 10 (4+6) gather features, and can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti.yaml`
 
 |                                             | Tx1 time | Xavier time |resolution| training data | mean ap | nd score  | car ap | ped ap | truck ap| download |
 |-----------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
 | cbgs_ppmh | ~700ms   | ~140ms |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) |
 | zz0809_512_e50 |~700ms| ~140ms |64x512x512|nusc tr-v|0.460|0.524|0.818|0.733|0.507|[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|
 | zz0808_256_e50 |~250ms| ~110ms |64x256x256|nusc tr-v|0.351|0.454|0.781|0.571|0.427|[pfe](https://drive.google.com/file/d/1pxsP5fhQG0XzpU0yzJOjRcO3ru_JM5Vn/view?usp=sharing) [backbone](https://drive.google.com/file/d/1Pb8xZ_55oo95SDSzS1KHvQ_MvnS-X1Iv/view?usp=sharing)|
+|             kitti models                       |  |  | | |  | | car ap@0.7 | ped ap@0.5 | truck ap@0.7|  |
+| z0927_kitti |~700ms| ~140ms |64x512x512|kitti|||90.149|44.893|34.977|[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|
 
 More models will be released recently.

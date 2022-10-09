@@ -322,7 +322,7 @@ void PreprocessPointsCuda::DoPreprocessPointsCuda(
     int* host_pillar_count, 
     float* dev_pfe_gather_feature) {
     // initialize paraments
-    std::cout << max_num_points_per_pillar_ << " " << num_point_feature_ << std::endl;
+    // std::cout << max_num_points_per_pillar_ << " " << num_point_feature_ << std::endl;
     GPU_CHECK(cudaMemset(dev_pillar_point_feature_in_coors_, 0 , grid_y_size_ * grid_x_size_ * max_num_points_per_pillar_ *  num_point_feature_ * sizeof(float)));
     GPU_CHECK(cudaMemset(dev_pillar_count_histo_, 0 , grid_y_size_ * grid_x_size_ * sizeof(int)));
     GPU_CHECK(cudaMemset(dev_counter_, 0, sizeof(int)));
