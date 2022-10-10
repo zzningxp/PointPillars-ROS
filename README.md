@@ -144,7 +144,9 @@ More test rosbag, like kitti, carla or real data by myself, will be released rec
 Faster ONNX models on TX1:
 * zz0809_512_e50 model is with the same config file as cbgs model, and the evaluation data is re-tested by the same eval benchmark.
 * zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
-* z0927_kitti is trained by kitti dataset, with three classes. It has only 10 (4+6) gather features, and can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti.yaml`
+* z0927_kitti is trained by kitti dataset, with three classes. It has only 10 (4+6) gather features, and can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti_g10.yaml`
+* z1009_kitti_g11 is trained by kitti dataset, with three classes. It has 11 gather features, with one refile zero dim. It can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti_g11.yaml`
+ 
 
 |                                             | download | Tx1 time | Xavier time |resolution| training data | mean ap | nd score  | car ap | ped ap | truck ap|
 |-----------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
