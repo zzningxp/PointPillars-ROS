@@ -76,6 +76,9 @@ void PointPillars::InitParams()
         str = "kitti";
         if (kDataSet.find(str) != std::string::npos) {
             kNumPointFeature = 4; // [x, y, z, 0, 0], kitti
+            bool refillDim = params["MODEL"]["VFE"]["WITH_REFILL_DIM"].as<bool>(false);
+            if (refillDim)
+                kNumPointFeature += 1;
             dataSetType = str;
         } else {
             std::cout << "DataSet should include 'nuscenes','kitti' in DATA_CONFIG._BASE_CONFIG_" << std::endl;
@@ -122,19 +125,19 @@ void PointPillars::InitParams()
         kRPNHeadSpaceCount += num_cls_per_head * num_cls_per_head;
         kMultiheadLabelMapping.emplace_back(value);
     }
-    std::cout << kRPNHeadSpaceCount << std::endl;
-    for (int idx_head = 0; idx_head < kRPNHeadNum; ++idx_head){
-        std::cout << kRPNClsPerHead[idx_head] << " ";
-    }
-    std::cout << std::endl;
-    for (int idx_head = 0; idx_head < kNumClass; ++idx_head){
-        std::cout << kRPNHeadStride[idx_head] << " ";
-    }
-    std::cout << std::endl;
-    for (int idx_head = 0; idx_head < kNumClass; ++idx_head){
-        std::cout << kRPNHeadOffset[idx_head] << " ";
-    }
-    std::cout << std::endl;
+    // std::cout << kRPNHeadSpaceCount << std::endl;
+    // for (int idx_head = 0; idx_head < kRPNHeadNum; ++idx_head){
+    //     std::cout << kRPNClsPerHead[idx_head] << " ";
+    // }
+    // std::cout << std::endl;
+    // for (int idx_head = 0; idx_head < kNumClass; ++idx_head){
+    //     std::cout << kRPNHeadStride[idx_head] << " ";
+    // }
+    // std::cout << std::endl;
+    // for (int idx_head = 0; idx_head < kNumClass; ++idx_head){
+    //     std::cout << kRPNHeadOffset[idx_head] << " ";
+    // }
+    // std::cout << std::endl;
 
     // Generate secondary parameters based on above.
     kGridXSize = static_cast<int>((kMaxXRange - kMinXRange) / kPillarXSize); //512
