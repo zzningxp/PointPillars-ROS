@@ -96,6 +96,7 @@ if(TRT_AVAIL AND CUDA_AVAIL AND CUDNN_AVAIL)
 
   cuda_add_library(gpu_point_pillars_lib
     nodes/preprocess.cu
+    nodes/boolvfe.cu
     # nodes/anchor_mask_cuda.cu
     nodes/scatter.cu
     nodes/postprocess.cu

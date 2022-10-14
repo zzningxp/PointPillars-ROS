@@ -3,7 +3,8 @@ pp_path=`pwd`/src
 #model_prefix=z0808_e50 ## 256x256
 
 #model_prefix=z0927_kitti
-model_prefix=z1009_kitti_e72
+#model_prefix=z1009_kitti_e72
+model_prefix=z1010_livox_e75
 
 #pp_config=cbgs_pp_multihead.yaml
 pp_config=pointpillar_kitti_g11.yaml

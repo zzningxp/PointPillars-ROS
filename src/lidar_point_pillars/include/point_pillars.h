@@ -67,6 +67,7 @@
 #include "common.h"
 #include <yaml-cpp/yaml.h>
 #include "preprocess.h"
+#include "boolvfe.h"
 #include "scatter.h"
 #include "postprocess.h"
 
@@ -109,6 +110,7 @@ class Logger : public nvinfer1::ILogger {
 
 class PointPillars {
  private:
+    int netType;
     // initialize in initializer list
     const float score_threshold_;
     const float nms_overlap_threshold_;
@@ -191,6 +193,7 @@ class PointPillars {
     float* host_score_;
     int*   host_filtered_count_;
 
+    int kNumBevFeatures;
     int kRPNHeadNum;
     std::vector<int> kRPNClsPerHead;
     std::vector<int> kRPNHeadCount;
@@ -206,7 +209,8 @@ class PointPillars {
     // float* dev_box_for_nms_;
     // int*   dev_filter_count_;
 
-    std::unique_ptr<PreprocessPointsCuda> preprocess_points_cuda_ptr_;
+    std::unique_ptr<PreprocessPointsCuda> pp_preprocess_points_cuda_ptr_;
+    std::unique_ptr<BoolVFECuda> boolvfe_cuda_ptr_;
     std::unique_ptr<ScatterCuda> scatter_cuda_ptr_;
     std::unique_ptr<PostprocessCuda> postprocess_cuda_ptr_;
 
@@ -224,7 +228,7 @@ class PointPillars {
 
     /**
      * @brief Memory set to 0 for device memory
-     * @details Called in the DoInference
+     * @details Called in the doPPInference
      */
     void SetDeviceMemoryToZero();
 
@@ -238,7 +242,7 @@ class PointPillars {
      * @param[in] usr_onnx_ if true, parse ONNX 
      * @details Called in the constructor
      */
-    void InitTRT(const bool use_onnx);
+    void InitTRT(const bool use_onnx, const int read_vfe);
     /**
      * @brief Convert ONNX to TensorRT model
      * @param[in] model_file ONNX model file path
@@ -289,15 +293,19 @@ class PointPillars {
                 const std::string pp_config);
     ~PointPillars();
 
-    /**
-     * @brief Call PointPillars for the inference
-     * @param[in] in_points_array Point cloud array
-     * @param[in] in_num_points Number of points
-     * @param[out] out_detections Network output bounding box
-     * @param[out] out_labels Network output object's label
-     * @details This is an interface for the algorithm
-     */
     void doInference(const float* in_points_array,
+                    const int in_num_points,
+                    std::vector<float>* out_detections,
+                    std::vector<int>* out_labels,
+                    std::vector<float>* out_scores);
+
+    void doPPInference(const float* in_points_array,
+                    const int in_num_points,
+                    std::vector<float>* out_detections,
+                    std::vector<int>* out_labels,
+                    std::vector<float>* out_scores);
+
+    void doBMapInference(const float* in_points_array,
                     const int in_num_points,
                     std::vector<float>* out_detections,
                     std::vector<int>* out_labels,

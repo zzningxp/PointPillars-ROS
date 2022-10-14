@@ -219,11 +219,6 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   std::vector<float> out_detection;
   std::vector<int> out_labels;
   std::vector<float> out_scores;
-  // std::cout << "sample points_array: ";
-  // for (int i = 0; i < 12; i++){
-  //   std::cout << *(points_array + i) << "\t";
-  // }
-  // std::cout << std::endl;
   point_pillars_ptr_->doInference(points_array, pcl_pc_ptr->size(), &out_detection, &out_labels, &out_scores);
   double t2 = ros::Time::now().toSec();
 

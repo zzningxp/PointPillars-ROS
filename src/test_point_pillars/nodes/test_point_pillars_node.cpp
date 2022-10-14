@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     std::vector<float> out_scores;
 
     cudaDeviceSynchronize();
-    // pp.doInference(points_array, in_num_points, &out_detections, &out_labels , &out_scores);
+    // pp.doPPInference(points_array, in_num_points, &out_detections, &out_labels , &out_scores);
     point_pillars_ptr_->doInference(points_array, in_num_points, &out_detections, &out_labels , &out_scores);
     cudaDeviceSynchronize();
     int BoxFeature = 7;
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
     std::cout << "Num detected: " << num_objects << std::endl;
     // for (int i = 0 ; i < out_detections.size() / BoxFeature ; ++i) {
-    for (int i = 0 ; i < 5 ; ++i) {
+    for (int i = 0 ; i < 5 && i < num_objects; ++i) {
         for (int j = 0 ; j < BoxFeature ; ++j) {
             std::cout << out_detections.at(i * BoxFeature + j) << " ";
         }
