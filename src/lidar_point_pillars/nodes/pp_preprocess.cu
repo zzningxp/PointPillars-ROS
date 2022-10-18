@@ -48,7 +48,7 @@
 
 // headers in local files
 #include "common.h"
-#include "preprocess.h"
+#include "pp_preprocess.h"
 
 __global__ void make_pillar_histo_kernel(
     const float* dev_points, float* dev_pillar_point_feature_in_coors,

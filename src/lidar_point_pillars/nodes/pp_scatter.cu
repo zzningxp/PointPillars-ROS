@@ -44,7 +44,7 @@
 
 
 //headers in local files
-#include "scatter.h"
+#include "pp_scatter.h"
 
 __global__ void scatter_kernel(int *x_coors, int *y_coors, float *pfe_output,
   float *scattered_feature, const int grid_x_size,

@@ -66,10 +66,10 @@
 // #include "params.h"
 #include "common.h"
 #include <yaml-cpp/yaml.h>
-#include "preprocess.h"
+#include "pp_preprocess.h"
 #include "boolvfe.h"
-#include "scatter.h"
-#include "postprocess.h"
+#include "pp_scatter.h"
+#include "multi_head.h"
 
 using namespace std;
 
@@ -110,7 +110,7 @@ class Logger : public nvinfer1::ILogger {
 
 class PointPillars {
  private:
-    int netType;
+    int VFENetType;
     // initialize in initializer list
     const float score_threshold_;
     const float nms_overlap_threshold_;

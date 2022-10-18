@@ -86,13 +86,13 @@ void PointPillars::InitParams()
         }
     }
     std::cout << "DataSet: " << dataSetType << std::endl;
-    netType = 0;
-    std::string netTypeStr = params["MODEL"]["VFE"]["NAME"].as<std::string>();
+    VFENetType = 0;
+    std::string VFENetTypeStr = params["MODEL"]["VFE"]["NAME"].as<std::string>();
     str = "BoolVFE";
-    if (netTypeStr.find(str) != std::string::npos){
-        netType = 1; 
+    if (VFENetTypeStr.find(str) != std::string::npos){
+        VFENetType = 1; 
     }
-    std::cout << "VFE netType: " << netTypeStr << std::endl;
+    std::cout << "VFE VFENetType: " << VFENetTypeStr << std::endl;
 
     kNumGatherPointFeature = kNumPointFeature + 6;
     kNumInputBoxFeature = 7;
@@ -179,10 +179,10 @@ PointPillars::PointPillars(const float score_threshold,
       pp_config_(pp_config)
 {
     InitParams();
-    InitTRT(use_onnx_, netType);
+    InitTRT(use_onnx_, VFENetType);
     DeviceMemoryMalloc();
 
-    if (netType == 1){
+    if (VFENetType == 1){
         boolvfe_cuda_ptr_.reset(new BoolVFECuda(
             kNumThreads,
             kInputPointFeature,
@@ -360,8 +360,7 @@ void PointPillars::InitTRT(const bool use_onnx, const int read_vfe) {
   
 }
 
-void PointPillars::OnnxToTRTModel(
-    const std::string& model_file,  // name of the onnx model
+void PointPillars::OnnxToTRTModel(const std::string& model_file,  // name of the onnx model
     nvinfer1::ICudaEngine** engine_ptr) 
 {
     int verbosity = static_cast<int>(nvinfer1::ILogger::Severity::kWARNING);
@@ -397,8 +396,7 @@ void PointPillars::OnnxToTRTModel(
     builder->destroy();
 }
 
-void PointPillars::EngineToTRTFile(
-    const std::string &engine_file ,     
+void PointPillars::EngineToTRTFile(const std::string &engine_file ,     
     nvinfer1::ICudaEngine** engine_ptr)  
 {
     nvinfer1::ICudaEngine* engine = *engine_ptr;
@@ -410,8 +408,7 @@ void PointPillars::EngineToTRTFile(
     serialized_model->destroy();
 }
 
-void PointPillars::EngineToTRTModel(
-    const std::string &engine_file ,     
+void PointPillars::EngineToTRTModel(const std::string &engine_file ,     
     nvinfer1::ICudaEngine** engine_ptr)  
 {
     int verbosity = static_cast<int>(nvinfer1::ILogger::Severity::kWARNING);
@@ -452,10 +449,10 @@ void PointPillars::doInference(const float* in_points_array,
                                 std::vector<float>* out_detections,
                                 std::vector<int>* out_labels,
                                 std::vector<float>* out_scores) {
-    if (netType == 0)
+    if (VFENetType == 0)
         doPPInference(in_points_array, in_num_points, out_detections, out_labels, out_scores);
     else
-    if (netType == 1)
+    if (VFENetType == 1)
         doBMapInference(in_points_array, in_num_points, out_detections, out_labels, out_scores);
 }
 

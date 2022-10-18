@@ -47,7 +47,7 @@
 
 // headers in local files
 #include "common.h"
-#include "postprocess.h"
+#include "multi_head.h"
 #include <stdio.h>
 
 template <typename T>
