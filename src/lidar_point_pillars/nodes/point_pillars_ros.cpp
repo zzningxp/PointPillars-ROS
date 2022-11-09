@@ -44,7 +44,7 @@ PointPillarsROS::PointPillarsROS()
   private_nh_.param<bool>("baselink_support", baselink_support_, true);
 
   //algorithm related params
-  private_nh_.param<bool>("reproduce_result_mode", reproduce_result_mode_, false);
+  private_nh_.param<bool>("use_tracking", use_tracking_, false);
   private_nh_.param<float>("score_threshold", score_threshold_, 0.5f);
   private_nh_.param<float>("nms_overlap_threshold", nms_overlap_threshold_, 0.5f);
   private_nh_.param<bool>("use_onnx", use_onnx_, true);
@@ -87,9 +87,8 @@ void PointPillarsROS::pubDetectedObject(
     const std::vector<float>& out_scores,
     const std_msgs::Header& in_header)
 {
-  autoware_msgs::DetectedObjectArray objects;
-  objects.header = in_header;
   int num_objects = detections.size() / OUTPUT_NUM_BOX_FEATURE_;
+  std::vector<autoware_msgs::DetectedObject> tracking_objects;
   for (size_t i = 0; i < num_objects; i++)
   {
     // if (out_labels[i] > 0){
@@ -121,22 +120,20 @@ void PointPillarsROS::pubDetectedObject(
     object.dimensions.y = detections[i * OUTPUT_NUM_BOX_FEATURE_ + 3];
     object.dimensions.z = detections[i * OUTPUT_NUM_BOX_FEATURE_ + 5];
 
-    // std::cout << 
-    //     object.pose.position.x << " " <<
-    //     object.pose.position.y << " " <<
-    //     object.pose.position.z << " " <<
-    //     object.pose.orientation.x << " " <<
-    //     object.pose.orientation.y << " " <<
-    //     object.pose.orientation.z << " " <<
-    //     object.pose.orientation.w << " " <<
-    //     object.dimensions.x << " " <<
-    //     object.dimensions.y << " " <<
-    //     object.dimensions.z << " " << std::endl;
-
     object.label = point_pillars_ptr_->kAnchorNames[out_labels[i]];
     object.score = out_scores[i];
+    tracking_objects.push_back(object);
+  }
 
-    objects.objects.push_back(object);
+  if (use_tracking_){
+    std::cout << "Before tracking: " << tracking_objects.size() << "\n";
+    tracker.track(tracking_objects, tracking_objects);
+    std::cout << "After tracking: " << tracking_objects.size() << "\n";
+  }
+  autoware_msgs::DetectedObjectArray objects;
+  objects.header = in_header;
+  for(std::vector<autoware_msgs::DetectedObject>::iterator it = tracking_objects.begin(); it != tracking_objects.end(); it++) {
+    objects.objects.push_back(*it);
   }
   // std::cout << "publish objects num: " << objects.objects.size() << std::endl;
   pub_objects_.publish(objects);
@@ -169,6 +166,29 @@ void PointPillarsROS::analyzeTFInfo(tf::StampedTransform baselink2lidar)
   angle_transform_inversed_ = angle_transform_.inverse();
 }
 
+void PointPillarsROS::pclSave(const pcl::PointCloud<pcl::PointXYZI>::Ptr& in_pcl_pc_ptr, int suffix)
+{
+  fstream ofile;
+  string file_name = "/home/nvidia/data/daodao/PointPillars-ROS/out-" + std::to_string(suffix) + ".bin";
+  // string file_name = "out-" + std::to_string(suffix) + ".bin";
+  ofile.open(file_name, std::ios::out | std::ios::binary );
+
+  float f = 0;
+  for (size_t i = 0; i < in_pcl_pc_ptr->size(); i++)
+  {
+    pcl::PointXYZI point = in_pcl_pc_ptr->at(i);
+    if (i == 0)
+      std::cout << point;
+    ofile.write(reinterpret_cast<const char*>(&point.x), sizeof(float));
+    ofile.write(reinterpret_cast<const char*>(&point.y), sizeof(float));
+    ofile.write(reinterpret_cast<const char*>(&point.z), sizeof(float));
+    ofile.write(reinterpret_cast<const char*>(&point.intensity), sizeof(float));
+    ofile.write(reinterpret_cast<const char*>(&f), sizeof(float));
+  }
+  std::cout << "Open Save File " << file_name << " " << in_pcl_pc_ptr->size() << "\n";
+  ofile.close();
+}
+
 void PointPillarsROS::pclToArray(const pcl::PointCloud<pcl::PointXYZI>::Ptr& in_pcl_pc_ptr, float* out_points_array,
                                  const float offset_z)
 {
@@ -189,6 +209,7 @@ void PointPillarsROS::pclToArray(const pcl::PointCloud<pcl::PointXYZI>::Ptr& in_
 
 void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
+  std::cout << "\n----------\n";
   double t0 = ros::Time::now().toSec();
 
   pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_pc_ptr(new pcl::PointCloud<pcl::PointXYZI>);
@@ -217,6 +238,7 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
     pclToArray(pcl_pc_ptr, points_array);
   }
 
+  // pclSave(pcl_pc_ptr, msg->header.seq);
   double t1 = ros::Time::now().toSec();
   std::vector<float> out_detection;
   std::vector<int> out_labels;
@@ -224,19 +246,18 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   point_pillars_ptr_->doInference(points_array, pcl_pc_ptr->size(), &out_detection, &out_labels, &out_scores);
   double t2 = ros::Time::now().toSec();
 
-  // std::cout << msg->header.seq << "\n";
-  // for (int i = 0; i < out_detection.size()/OUTPUT_NUM_BOX_FEATURE_; i++){
-  //   std::cout << out_labels[i] << "\t" << out_scores[i] << "\t";
-  //   for (int j = 0; j < OUTPUT_NUM_BOX_FEATURE_; j++){
-  //     std::cout << out_detection[i*OUTPUT_NUM_BOX_FEATURE_ + j] << "\t";
-  //   }
-  //   std::cout << "\n";
-  // }
-  // std::cout << std::endl;
+  std::cout << msg->header.seq << "\n";
+  for (int i = 0; i < out_detection.size()/OUTPUT_NUM_BOX_FEATURE_; i++){
+    std::cout << out_labels[i] << "\t" << out_scores[i] << "\t";
+    for (int j = 0; j < OUTPUT_NUM_BOX_FEATURE_; j++){
+      std::cout << out_detection[i*OUTPUT_NUM_BOX_FEATURE_ + j] << "\t";
+    }
+    std::cout << "\n";
+  }
+  
   std::cout << "pcl array size: " << pcl_pc_ptr->size() << " num_objects: " << out_detection.size()/OUTPUT_NUM_BOX_FEATURE_ 
       << "\t time: " << (double)(t2 - t1)*1000 << "ms" << std::endl;
 
-  // std::cout << std::endl;
   delete[] points_array;
   pubDetectedObject(out_detection, out_labels, out_scores, msg->header);
 }

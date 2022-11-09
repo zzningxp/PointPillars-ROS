@@ -38,6 +38,7 @@
 
 // headers in local files
 #include "point_pillars.h"
+#include "tracker.h"
 
 class PointPillarsROS
 {
@@ -56,7 +57,7 @@ private:
 
   // rosparam
   bool baselink_support_;
-  bool reproduce_result_mode_;
+  bool use_tracking_;
   float score_threshold_;
   float nms_overlap_threshold_;
   bool use_onnx_;
@@ -64,6 +65,8 @@ private:
   std::string backbone_file_;
   std::string pp_config_;
   // end rosparam
+
+  Tracker tracker;
 
   ros::NodeHandle nh_;
   ros::Subscriber sub_points_;
@@ -118,6 +121,7 @@ private:
   void pclToArray(const pcl::PointCloud<pcl::PointXYZI>::Ptr& in_pcl_pc_ptr, float* out_points_array,
                   const float offset_z = 0);
 
+  void pclSave(const pcl::PointCloud<pcl::PointXYZI>::Ptr& in_pcl_pc_ptr, int suffix);
   /**
   * @brief publish DetectedObject
   * @param[in] detections Network output bounding box

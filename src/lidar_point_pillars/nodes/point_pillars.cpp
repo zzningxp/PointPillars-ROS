@@ -65,6 +65,7 @@ void PointPillars::InitParams()
     kMaxNumPillars = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_NUMBER_OF_VOXELS"]["test"].as<int>();
     kMaxNumPointsPerPillar = params["DATA_CONFIG"]["DATA_PROCESSOR"][2]["MAX_POINTS_PER_VOXEL"].as<int>();
     kInputPointFeature = 5;
+    kMaxNumPoints = kMaxNumPillars * 20;
     std::string kDataSet = params["DATA_CONFIG"]["_BASE_CONFIG_"].as<std::string>();
     std::string str;
     std::string dataSetType;
@@ -229,6 +230,8 @@ PointPillars::PointPillars(const float score_threshold,
 
 void PointPillars::DeviceMemoryMalloc() {
     bool ret;
+    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), kMaxNumPoints * kInputPointFeature * sizeof(float))); // in_num_points , 5
+
     // for pillars 
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_num_points_per_pillar_), kMaxNumPillars * sizeof(float))); // M
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_x_coors_), kMaxNumPillars * sizeof(int))); // M
@@ -275,6 +278,7 @@ void PointPillars::DeviceMemoryMalloc() {
 }
 
 PointPillars::~PointPillars() {
+    GPU_CHECK(cudaFree(dev_points));
     // for pillars 
     GPU_CHECK(cudaFree(dev_num_points_per_pillar_));
     GPU_CHECK(cudaFree(dev_x_coors_));
@@ -310,6 +314,7 @@ PointPillars::~PointPillars() {
 
 void PointPillars::SetDeviceMemoryToZero() {
 
+    GPU_CHECK(cudaMemset(dev_points,                 0, kMaxNumPoints * kInputPointFeature * sizeof(float)));
     GPU_CHECK(cudaMemset(dev_num_points_per_pillar_, 0, kMaxNumPillars * sizeof(float)));
     GPU_CHECK(cudaMemset(dev_x_coors_,               0, kMaxNumPillars * sizeof(int)));
     GPU_CHECK(cudaMemset(dev_y_coors_,               0, kMaxNumPillars * sizeof(int)));
@@ -461,20 +466,26 @@ void PointPillars::doBMapInference(const float* in_points_array,
                                 std::vector<float>* out_detections,
                                 std::vector<int>* out_labels,
                                 std::vector<float>* out_scores) {
+    auto preprocess_start = std::chrono::high_resolution_clock::now();
+
     std::cout << "BoolMap inference" << std::endl;
-    SetDeviceMemoryToZero();
-    cudaDeviceSynchronize();
+    // SetDeviceMemoryToZero();
+    // cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
-    float* dev_points;
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kInputPointFeature * sizeof(float))); // in_num_points , 5
-    GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kInputPointFeature * sizeof(float)));
-    GPU_CHECK(cudaMemcpy(dev_points, in_points_array,
-                        in_num_points * kInputPointFeature * sizeof(float),
-                        cudaMemcpyHostToDevice));
+    int num_points = in_num_points;
+    if (num_points > kMaxNumPoints) {
+        std::cout << "Number of Lidar Points " << num_points << " exceed the max number " << kMaxNumPoints << ". Drop the exceeding parts.";
+        num_points = kMaxNumPoints;
+    }
+    GPU_CHECK(cudaMemcpy(dev_points, in_points_array, num_points * kInputPointFeature * sizeof(float), cudaMemcpyHostToDevice));
     
+    // std::cout << in_num_points  << " " << kInputPointFeature << "\n";
+    // for (int i = 0; i < 20; i++){
+    //     cout << in_points_array[i] << " ";
+    // }
+    // cout << "\n";
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;
-    auto preprocess_start = std::chrono::high_resolution_clock::now();
     boolvfe_cuda_ptr_->DoBoolVFECuda(dev_points, in_num_points, dev_scattered_feature_);
     cudaDeviceSynchronize();
     auto preprocess_end = std::chrono::high_resolution_clock::now();
@@ -495,6 +506,10 @@ void PointPillars::doBMapInference(const float* in_points_array,
     // [STEP 6]: postprocess (multihead)
     auto postprocess_start = std::chrono::high_resolution_clock::now();
 
+    // float *temp = new float[kRpnInputSize]();
+    // GPU_CHECK(cudaMemcpy(temp, reinterpret_cast<float*>(rpn_buffers_[0]), 
+    //     kRpnInputSize * sizeof(float), cudaMemcpyDeviceToHost));
+
     for (int i = 0; i<kRPNHeadNum; i++){
         GPU_CHECK(cudaMemcpy(&host_score_[kRPNHeadStride0[i] * kNumAnchorPerCls], reinterpret_cast<float*>(rpn_buffers_[i + 1]), 
             kNumAnchorPerCls * kRPNClsPerHead[i] * kRPNClsPerHead[i] * sizeof(float), cudaMemcpyDeviceToHost));
@@ -502,6 +517,16 @@ void PointPillars::doBMapInference(const float* in_points_array,
     GPU_CHECK(cudaMemcpy(host_box_, reinterpret_cast<float*>(rpn_buffers_[kRPNHeadNum + 1]), 
         kNumClass * kNumAnchorPerCls * kNumOutputBoxFeature * sizeof(float), cudaMemcpyDeviceToHost));
 
+    // cout << kNumAnchorPerCls << " " << kRPNClsPerHead[0] << " " << kRPNClsPerHead[0] << "\n";
+    // for (int i = 100; i < 120; i++){
+    //     cout << host_score_[i] << " ";
+    // }
+    // cout << "\n";
+    // cout << kNumClass << " " << kNumAnchorPerCls << " " << kNumOutputBoxFeature << "\n";
+    // for (int i = 100; i < 120; i++){
+    //     cout << host_box_[i] << " ";
+    // }
+    // cout << "\n";
     postprocess_cuda_ptr_->DoPostprocessCuda(
         host_box_, 
         host_score_, 
@@ -536,15 +561,16 @@ void PointPillars::doPPInference(const float* in_points_array,
                                 std::vector<int>* out_labels,
                                 std::vector<float>* out_scores) 
 {
-    SetDeviceMemoryToZero();
-    cudaDeviceSynchronize();
+    std::cout << "Point Pillars inference" << std::endl;
+    // SetDeviceMemoryToZero();
+    // cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
-    float* dev_points;
-    GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kInputPointFeature * sizeof(float))); // in_num_points , 5
-    GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kInputPointFeature * sizeof(float)));
-    GPU_CHECK(cudaMemcpy(dev_points, in_points_array,
-                        in_num_points * kInputPointFeature * sizeof(float),
-                        cudaMemcpyHostToDevice));
+    int num_points = in_num_points;
+    if (num_points > kMaxNumPoints) {
+        std::cout << "Number of Lidar Points " << num_points << " exceed the max number " << kMaxNumPoints << ". Drop the exceeding parts.";
+        num_points = kMaxNumPoints;
+    }
+    GPU_CHECK(cudaMemcpy(dev_points, in_points_array, num_points * kInputPointFeature * sizeof(float), cudaMemcpyHostToDevice));
     
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;

@@ -1,7 +1,7 @@
 <launch>
   <arg name="input_topic" default="/points_raw" />
   <arg name="baselink_support" default="true" />
-  <arg name="reproduce_result_mode" default="true" />
+  <arg name="use_tracking" default="true" />
   <arg name="score_threshold" default="0.4" />
   <arg name="nms_overlap_threshold" default="0.5" />
   <arg name="use_onnx" default="true"/>
@@ -12,7 +12,7 @@
     <remap from="/points_raw" to="$(arg input_topic)"/>
 
     <param name="baselink_support"            value="$(arg baselink_support)" />
-    <param name="reproduce_result_mode"        value="$(arg reproduce_result_mode)" />
+    <param name="use_tracking"        value="$(arg use_tracking)" />
     <param name="score_threshold"   value="$(arg score_threshold)" />
     <param name="nms_overlap_threshold"         value="$(arg nms_overlap_threshold)" />
     <param name="use_onnx"   value="$(arg use_onnx)" />

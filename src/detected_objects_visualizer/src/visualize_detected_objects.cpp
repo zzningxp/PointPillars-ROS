@@ -146,7 +146,7 @@ void VisualizeDetectedObjects::DetectedObjectsCallback(const autoware_msgs::Dete
   polygon_hulls = ObjectsToHulls(in_objects);
   bounding_boxes = ObjectsToBoxes(in_objects);
   // object_models = ObjectsToModels(in_objects);
-  centroid_markers = ObjectsToCentroids(in_objects);
+  // centroid_markers = ObjectsToCentroids(in_objects);
 
   visualization_markers.markers.insert(visualization_markers.markers.end(),
                                        label_markers.markers.begin(), label_markers.markers.end());
@@ -448,8 +448,9 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
 
       label_marker.id = marker_id_++;
 
+      label_marker.text = "id: " + std::to_string(object.id) + "\n";
       if(!object.label.empty() && object.label != "unknown")
-        label_marker.text = object.label + " "; //Object Class if available
+        label_marker.text += object.label + "\n"; //Object Class if available
 
       std::stringstream distance_stream;
       distance_stream << std::fixed << std::setprecision(1)
@@ -460,7 +461,7 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
 
       std::stringstream score_stream;
       score_stream << std::fixed << std::setprecision(3) << object.score; 
-      label_marker.text += "\n(" + score_stream.str() + ")";
+      label_marker.text += "(" + score_stream.str() + ")";
 
       if (object.velocity_reliable)
       {

@@ -109,6 +109,7 @@ if(TRT_AVAIL AND CUDA_AVAIL AND CUDNN_AVAIL)
 
   add_library(point_pillars_lib
     nodes/point_pillars.cpp
+    nodes/tracker.cpp
     # nodes/preprocess_points.cpp
   )
 
