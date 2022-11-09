@@ -85,8 +85,6 @@ void quicksort_kernel(float* score, int* indexes, int len )
     quicksort_warp(score,indexes ,0,len-1);
 }
 
-
-
 PostprocessCuda::PostprocessCuda(const int num_threads, const float float_min, const float float_max,
     const int num_class,const int num_anchor_per_cls,
     const std::vector<std::vector<int>> multihead_label_mapping,
@@ -148,6 +146,10 @@ void PostprocessCuda::DoPostprocessCuda(
                 // printf("up , low : %f ,%f \n", score_upper , score_lower);
             }
 
+            // if (score_upper > score_threshold_){
+            //   cout << kRPNHeadStride_[class_idx] * num_anchor_per_cls_ + anchor_idx << "\n";
+            //   cout << host_score[kRPNHeadStride_[class_idx] * num_anchor_per_cls_ + anchor_idx] << " " << score_upper << " " << score_lower << "\n";
+            // }
             if (score_upper > score_threshold_ && host_filtered_count[class_idx] < nms_pre_maxsize_)  // filter out boxes which threshold less than score_threshold
             {
                 host_filtered_score[host_filtered_count[class_idx]] = score_upper;
@@ -172,6 +174,10 @@ void PostprocessCuda::DoPostprocessCuda(
             }
         }
         // printf("host_filter_count[%d] = %d\n", class_idx , host_filtered_count[class_idx]);
+        // for (int i = 0; i < 10; i++){
+        //     std::cout << host_filtered_score[i] << " ";
+        // }
+        // std::cout << "\n";
         if (host_filtered_count[class_idx] <= 0) 
             continue;
 
@@ -194,15 +200,10 @@ void PostprocessCuda::DoPostprocessCuda(
         for (int ith_box = 0 ; ith_box  < host_filtered_count[class_idx] ; ++ith_box) 
         {
             host_sorted_filtered_score[ith_box] = host_filtered_score[ith_box];
-            host_sorted_filtered_box[ith_box * 7 + 0] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 0];
-            host_sorted_filtered_box[ith_box * 7 + 1] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 1];
-            host_sorted_filtered_box[ith_box * 7 + 2] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 2];
-            host_sorted_filtered_box[ith_box * 7 + 3] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 3];
-            host_sorted_filtered_box[ith_box * 7 + 4] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 4];
-            host_sorted_filtered_box[ith_box * 7 + 5] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 5];
-            host_sorted_filtered_box[ith_box * 7 + 6] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + 6];
+            for (int j = 0; j < 7; j++) {
+                host_sorted_filtered_box[ith_box * 7 + j] = host_filtered_box[host_sorted_filtered_indexes[ith_box] * 7 + j];
+            }
         }
-
 
         // host to device for nms cuda
         // In fact, this cuda calc is also not necessary. 
@@ -239,13 +240,9 @@ void PostprocessCuda::DoPostprocessCuda(
         
         // int det_num_filtered_boxes_pre_class = 0;
         for (int box_idx = 0; box_idx < det_num_boxes_per_class; ++box_idx)  {    
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 0]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 1]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 2]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 3]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 4]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 5]);
-            out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + 6]);
+            for (int j = 0; j < 7; j++) {
+                out_detection.emplace_back(host_sorted_filtered_box[keep_inds[box_idx] * 7 + j]);
+            }
             out_score.emplace_back(host_sorted_filtered_score[keep_inds[box_idx]]);
             out_label.emplace_back(class_idx);
         }

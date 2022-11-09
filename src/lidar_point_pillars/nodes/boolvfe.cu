@@ -54,18 +54,14 @@ BoolVFECuda::~BoolVFECuda() {
 
 void BoolVFECuda::DoBoolVFECuda(
     const float* dev_points, const int in_num_points, 
-    int* dev_x_coors,int* dev_y_coors, 
-    float* dev_num_points_per_pillar,
-    float* dev_pillar_point_feature, 
-    float* dev_pillar_coors,
-    int* dev_sparse_pillar_map, 
-    int* host_pillar_count, 
     float* dev_pillar_count_histo) {
     // initialize paraments
-    std::cout << grid_y_size_ << " " << grid_x_size_ << " " << grid_z_size_ << " " << input_point_feature_ << std::endl;
+
     GPU_CHECK(cudaMemset(dev_pillar_count_histo, 0 , grid_y_size_ * grid_x_size_ * grid_z_size_ * sizeof(float)));
     int num_block = DIVUP(in_num_points , num_threads_);
 
+    // std::cout << grid_x_size_ << " " << grid_y_size_ << " " << grid_z_size_ << " " << in_num_points << " " << input_point_feature_ << " "
+    // << num_block  << " " << num_threads_ << std::endl;
     make_pillar_histo_kernel<<<num_block , num_threads_>>>(
         dev_points, dev_pillar_count_histo, in_num_points, 
         grid_x_size_, grid_y_size_, grid_z_size_, 
@@ -73,11 +69,32 @@ void BoolVFECuda::DoBoolVFECuda(
         pillar_x_size_, pillar_y_size_, pillar_z_size_, 
         input_point_feature_);
 
-    // float * temp_float = new float[grid_y_size_ * grid_x_size_ * grid_z_size_](); 
-    // GPU_CHECK(cudaMemcpy(temp_float, dev_pillar_count_histo, grid_y_size_ * grid_x_size_ * grid_z_size_ * sizeof(float), cudaMemcpyDeviceToHost));
-    // int cnt = 0;
-    // for (int i = 0; i < grid_y_size_ * grid_x_size_ * grid_z_size_; i++){
-    //     cnt += temp_float[i];
-    // } 
-    // std::cout << cnt << std::endl;
+    // std::cout << grid_x_size_ << " " << grid_y_size_ << " " << grid_z_size_ << " " << 
+    //     min_x_range_ << " " << min_y_range_ << " " << min_z_range_ << " " << 
+    //     pillar_x_size_ << " " << pillar_y_size_ << " " << pillar_z_size_ << "\n";
+    // float * host_point = new float[in_num_points](); 
+    // GPU_CHECK(cudaMemcpy(host_point, dev_points, in_num_points * input_point_feature_ * sizeof(float), cudaMemcpyDeviceToHost));
+    // for (int i = 0; i < in_num_points; i++){
+    //   // int z_coor = floor((host_point[i * input_point_feature_ + 2] - min_z_range_) / pillar_z_size_);
+    //   // if (z_coor == 38) 
+    //   //    cout << i << " " << host_point[i * input_point_feature_ + 2] << "\n";
+    // }
+    // float * temp = new float[grid_y_size_ * grid_x_size_ * grid_z_size_](); 
+    // GPU_CHECK(cudaMemcpy(temp, dev_pillar_count_histo, grid_y_size_ * grid_x_size_ * grid_z_size_ * sizeof(float), cudaMemcpyDeviceToHost));
+    // int sum = 0;
+    // for (int i = 0; i < grid_z_size_; i++){
+    //     int cnt = 0;
+    //     for (int j = 0; j < grid_y_size_ * grid_x_size_; j++){
+    //         cnt += temp[i * grid_y_size_ * grid_x_size_ + j];
+    //     }
+    //     sum += cnt;
+    //     std::cout << i << " " << cnt << "\n";
+    // }
+    // // std::cout << "total: " << sum << "\n";
+    // for (int i = 0; i < 100; i++){
+    //     for (int j = 80; j < 180; j++){
+    //         cout << temp[0 * grid_y_size_ * grid_x_size_ + j * grid_x_size_ + i] ;
+    //     }
+    //     std::cout << "\n";
+    // }
 }

@@ -68,7 +68,7 @@ void PointPillars::InitParams()
     std::string kDataSet = params["DATA_CONFIG"]["_BASE_CONFIG_"].as<std::string>();
     std::string str;
     std::string dataSetType;
-    str = "nuscenes";
+    str = "nu";
     if (kDataSet.find(str) != std::string::npos) {
         kNumPointFeature = 5; // [x, y, z, i, 0], nuscenes
         dataSetType = str;
@@ -475,11 +475,7 @@ void PointPillars::doBMapInference(const float* in_points_array,
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;
     auto preprocess_start = std::chrono::high_resolution_clock::now();
-    boolvfe_cuda_ptr_->DoBoolVFECuda(
-          dev_points, in_num_points, dev_x_coors_, dev_y_coors_,
-          dev_num_points_per_pillar_, dev_pillar_point_feature_, dev_pillar_coors_,
-          dev_sparse_pillar_map_, host_pillar_count_ ,
-          dev_scattered_feature_);
+    boolvfe_cuda_ptr_->DoBoolVFECuda(dev_points, in_num_points, dev_scattered_feature_);
     cudaDeviceSynchronize();
     auto preprocess_end = std::chrono::high_resolution_clock::now();
     // DEVICE_SAVE<float>(dev_pfe_gather_feature_,  kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature  , "0_Model_pfe_input_gather_feature");

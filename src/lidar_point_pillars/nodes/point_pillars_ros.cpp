@@ -208,7 +208,9 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   float* points_array = new float[pcl_pc_ptr->size() * NUM_POINT_FEATURE_];
   if (baselink_support_ && has_subscribed_baselink_)
   {
-    pclToArray(pcl_pc_ptr, points_array, offset_z_from_trained_data_);
+    // pclToArray(pcl_pc_ptr, points_array, offset_z_from_trained_data_);
+    // cout << "offset_z_from_trained_data_: " << offset_z_from_trained_data_ << "\n";
+    pclToArray(pcl_pc_ptr, points_array);
   }
   else
   {
@@ -222,17 +224,19 @@ void PointPillarsROS::pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& m
   point_pillars_ptr_->doInference(points_array, pcl_pc_ptr->size(), &out_detection, &out_labels, &out_scores);
   double t2 = ros::Time::now().toSec();
 
-  // for (int i = 0; i < NUM_POINT_FEATURE_; i++){
-  //   std::cout << out_detection[i] << "\t";
-  // }
-  // std::cout << out_labels[0] << out_scores[0] << std::endl;
+  // std::cout << msg->header.seq << "\n";
   // for (int i = 0; i < out_detection.size()/OUTPUT_NUM_BOX_FEATURE_; i++){
-  //   std::cout << out_labels[i] << "\t";
+  //   std::cout << out_labels[i] << "\t" << out_scores[i] << "\t";
+  //   for (int j = 0; j < OUTPUT_NUM_BOX_FEATURE_; j++){
+  //     std::cout << out_detection[i*OUTPUT_NUM_BOX_FEATURE_ + j] << "\t";
+  //   }
+  //   std::cout << "\n";
   // }
   // std::cout << std::endl;
   std::cout << "pcl array size: " << pcl_pc_ptr->size() << " num_objects: " << out_detection.size()/OUTPUT_NUM_BOX_FEATURE_ 
       << "\t time: " << (double)(t2 - t1)*1000 << "ms" << std::endl;
 
+  // std::cout << std::endl;
   delete[] points_array;
   pubDetectedObject(out_detection, out_labels, out_scores, msg->header);
 }

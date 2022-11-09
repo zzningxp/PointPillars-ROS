@@ -30,11 +30,5 @@ class BoolVFECuda {
 
   void DoBoolVFECuda(
     const float* dev_points, const int in_num_points, 
-    int* dev_x_coors,int* dev_y_coors, 
-    float* dev_num_points_per_pillar,
-    float* dev_pillar_point_feature, 
-    float* dev_pillar_coors,
-    int* dev_sparse_pillar_map, 
-    int* host_pillar_count, 
     float* dev_pillar_count_histo);
 };
