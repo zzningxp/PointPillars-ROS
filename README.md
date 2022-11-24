@@ -3,7 +3,7 @@ A 3D detection Pointpillars ROS deployment on Nvidia Jetson TX1/TX2
 
 This repo implements https://github.com/hova88/PointPillars_MultiHead_40FPS into Autoware lidar_point_pillars framework https://github.com/autowarefoundation/autoware_ai_perception/tree/master/lidar_point_pillars.
 
-Also, a fast Voxel-Feature-Extractor named boolmap (refer to https://github.com/Livox-SDK/livox_detection) has been implemented into this repo.
+Also, a fast Voxel-Feature-Extractor named **boolmap** (refer to https://github.com/Livox-SDK/livox_detection) has been implemented into this repo.
 The BOOLMAP vfe is very sample to map the detection range into binary voxels.
 Also it DOES NOT need any deep feature parameters.
 Further, it can achieve almost the same precisions of LARGE objects, however, it loses some details of smaller objects.
@@ -141,6 +141,10 @@ Xavier (single test):
 
 Boolmap on Xavier (single test):
 ```
+  Preprocess    1.16403  ms
+  Backbone      42.7098  ms
+  Postprocess   16.4531  ms
+  Summary       60.3469  ms
 ```
 
 ## Test Rosbag:
@@ -159,14 +163,14 @@ Faster ONNX models on TX1:
 * zz0808_256_e50 model is half resolution, you should used this config file to run: `src/lidar_point_pillars/cfgs/tx1_ppmh_256x256.yaml`
 * z0927_kitti is trained by kitti dataset, with three classes. It has only 10 (4+6) gather features, and can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti_g10.yaml`
 * z1009_kitti_g11 is trained by kitti dataset, with three classes. It has 11 gather features, with one refile zero dim. It can run with this config file: `src/lidar_point_pillars/cfgs/pointpillar_kitti_g11.yaml`
-* z1117_boolmap_e30 
+* z1117_boolmap_e30 is trained by nuscenes dataset, with boolmap vfe. It only has backbone onnx model. It can run with this config file: `pointpillar_boolmap_multihead.yaml`
 
 |                                             | download | Tx1 time | Xavier time |resolution| training data | mean ap | nd score  | car ap | ped ap | truck ap|
 |-----------|:--------:|:-----------:|:--------:|:-------------:|:-------:|:---------:|:------:|:------:|:-------:|:--------:| 
 | cbgs_ppmh | [pfe](https://drive.google.com/file/d/1gQWtBZ4vfrSmv2nToSIarr-d7KkEWqxw/view?usp=sharing) [backbone](https://drive.google.com/file/d/1dvUkjvhE0GEWvf6GchSGg8-lwukk7bTw/view?usp=sharing) | ~700ms   | ~140ms |64x512x512| unknown       |0.447    | 0.515     | 0.813  | 0.724  | 0.500   |
 | zz0809_512_e50 |[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|~700ms| ~140ms |64x512x512|nusc tr-v|0.460|0.524|0.818|0.733|0.507|
 | zz0808_256_e50 |[pfe](https://drive.google.com/file/d/1pxsP5fhQG0XzpU0yzJOjRcO3ru_JM5Vn/view?usp=sharing) [backbone](https://drive.google.com/file/d/1Pb8xZ_55oo95SDSzS1KHvQ_MvnS-X1Iv/view?usp=sharing)|~250ms| ~110ms |64x256x256|nusc tr-v|0.351|0.454|0.781|0.571|0.427|
-| z1117_boolmap_e30 |[backbone]()||40ms|64x512x512|nusc tr-v||||||
+| z1117_boolmap_e40 |[backbone](https://drive.google.com/file/d/12zucbZf4gK4tM5ytQy0W5nqzIPl9QLD6/view?usp=sharing)||~60ms|64x512x512|nusc tr-v|0.353|0.449|0.744|0.525|0.291|
 |             kitti models                       | | | | | | | | car ap@0.7 | ped ap@0.5 | truck ap@0.7|
 | z0927_kitti_g10 |[pfe](https://drive.google.com/file/d/1mLP3v0iXUG5CrT_KLi9VBbsBbByl-WeQ/view?usp=sharing) [backbone](https://drive.google.com/file/d/1bkQfxgyxYNyBbsnwgX_JWe8YgByBTSX7/view?usp=sharing)|~700ms| ~140ms |64x512x512|kitti|||90.149|44.893|34.977|
 | z1009_kitti_g11_e72 |[pfe](https://drive.google.com/file/d/1zlxStcAAqsoUsxe09zFsvenwj9QyQYJA/view?usp=sharing) [backbone](https://drive.google.com/file/d/1-mM4jy01vpl_5AEMcSgBLH5tcU-TcSHn/view?usp=sharing)|~700ms| ~140ms |64x512x512|kitti|||90.191|46.915|40.944|
