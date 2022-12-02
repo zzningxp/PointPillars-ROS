@@ -1,13 +1,7 @@
 pp_path=`pwd`/src
-#model_prefix=z0809_e50 ## 512x512
-#model_prefix=z0808_e50 ## 256x256
+model_prefix=boolmap_v01_466_1020
 
-#model_prefix=z0927_kitti
-model_prefix=z1009_kitti_e72
-
-
-#pp_config=cbgs_pp_multihead.yaml
-pp_config=pointpillar_kitti_g11.yaml
+pp_config=boolmap_multihead4_voxel0.1_deep466.yaml
 
 #input_bin=n008-2018-05-21-11-06-59-0400__LIDAR_TOP__1526915243047392.pcd.bin
 input_bin=000000.bin

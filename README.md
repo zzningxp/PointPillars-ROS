@@ -178,3 +178,5 @@ Faster ONNX models:
 All the models can be viewed on [BAIDU PAN](https://pan.baidu.com/s/1MbPKJxsNa_5qf_teWh7Mnw?pwd=cu2f).
 
 More models will be released recently.
+
+## How to train boolmap model?
