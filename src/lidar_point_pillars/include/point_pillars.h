@@ -132,7 +132,7 @@ class PointPillars {
     float kMaxZRange;
     // hyper parameters
     int kNumClass;
-    int kMaxNumPoints;
+    // int kMaxNumPoints;
     int kMaxNumPillars;
     int kMaxNumPointsPerPillar;
     int kInputPointFeature;
@@ -169,7 +169,7 @@ class PointPillars {
     int kNumAnchorPerCls;
     int host_pillar_count_[1];
 
-    float* dev_points;
+    // float* dev_points;
     int* dev_x_coors_;
     int* dev_y_coors_;
     float* dev_num_points_per_pillar_;
