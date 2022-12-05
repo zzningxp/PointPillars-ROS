@@ -469,8 +469,8 @@ void PointPillars::doBMapInference(const float* in_points_array,
     auto preprocess_start = std::chrono::high_resolution_clock::now();
 
     std::cout << "BoolMap inference" << std::endl;
-    // SetDeviceMemoryToZero();
-    // cudaDeviceSynchronize();
+    SetDeviceMemoryToZero();
+    cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
     float* dev_points;
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kInputPointFeature * sizeof(float))); // in_num_points , 5
@@ -568,8 +568,8 @@ void PointPillars::doPPInference(const float* in_points_array,
                                 std::vector<float>* out_scores) 
 {
     std::cout << "Point Pillars inference" << std::endl;
-    // SetDeviceMemoryToZero();
-    // cudaDeviceSynchronize();
+    SetDeviceMemoryToZero();
+    cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
     float* dev_points;
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points), in_num_points * kInputPointFeature * sizeof(float))); // in_num_points , 5
