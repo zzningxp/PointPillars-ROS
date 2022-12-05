@@ -572,6 +572,12 @@ void PointPillars::doPPInference(const float* in_points_array,
     }
     GPU_CHECK(cudaMemcpy(dev_points, in_points_array, num_points * kInputPointFeature * sizeof(float), cudaMemcpyHostToDevice));
     
+    // float * host_temp_space = new float[200000]();
+    // GPU_CHECK(cudaMemcpy(host_temp_space, dev_points, 200000 * sizeof(float), cudaMemcpyDeviceToHost));
+    // for (int i = 199980; i < 200000; i++)
+    //     cout << host_temp_space[i] << " ";
+    // cout << std::endl;
+
     // [STEP 2] : preprocess
     host_pillar_count_[0] = 0;
     auto preprocess_start = std::chrono::high_resolution_clock::now();
@@ -583,6 +589,11 @@ void PointPillars::doPPInference(const float* in_points_array,
     cudaDeviceSynchronize();
     auto preprocess_end = std::chrono::high_resolution_clock::now();
     // DEVICE_SAVE<float>(dev_pfe_gather_feature_,  kMaxNumPillars * kMaxNumPointsPerPillar * kNumGatherPointFeature  , "0_Model_pfe_input_gather_feature");
+
+    // GPU_CHECK(cudaMemcpy(host_temp_space, dev_pfe_gather_feature_, 200000 * sizeof(float), cudaMemcpyDeviceToHost));
+    // for (int i = 199800; i < 200000; i++)
+    //     cout << host_temp_space[i] << " ";
+    // cout << std::endl;
 
     // [STEP 3] : pfe forward
     cudaStream_t stream;
@@ -598,6 +609,7 @@ void PointPillars::doPPInference(const float* in_points_array,
 
     // std::cout << "pillar_count " << host_pillar_count_[0] << std::endl;
 
+
     // [STEP 4] : scatter pillar feature
     auto scatter_start = std::chrono::high_resolution_clock::now();
     scatter_cuda_ptr_->DoScatterCuda(
@@ -607,6 +619,11 @@ void PointPillars::doPPInference(const float* in_points_array,
     auto scatter_end = std::chrono::high_resolution_clock::now();   
     // DEVICE_SAVE<float>(dev_scattered_feature_ ,  kRpnInputSize,"2_Model_backbone_input_dev_scattered_feature");
     
+    // GPU_CHECK(cudaMemcpy(host_temp_space, dev_scattered_feature_, 200000 * sizeof(float), cudaMemcpyDeviceToHost));
+    // for (int i = 199800; i < 200000; i++)
+    //     cout << host_temp_space[i] << " ";
+    // cout << std::endl;
+
     // [STEP 5] : backbone forward
     auto backbone_start = std::chrono::high_resolution_clock::now();
     GPU_CHECK(cudaMemcpyAsync(rpn_buffers_[0], dev_scattered_feature_,
