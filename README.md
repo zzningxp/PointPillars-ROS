@@ -13,6 +13,14 @@ And the boolmap vfe with same multihead backbone run 40ms+ on Xavier.
 
 I use [OpenPCDet](https://github.com/hova88/OpenPCDet) to train accelerated models.
 
+## Update 2022Dec
+
+We developed another boolmap-implemented repository (https://github.com/zzningxp/CUDA-PointPillars-Boolmap), which uses NVIDIA-CUDA specified acceleration from (https://github.com/NVIDIA-AI-IOT/CUDA-PointPillars).
+
+With this implemention, the backbone inference time can be accelerated from 42.7 ms to 15.1 ms.
+
+However, it has not be implemented into ROS framework. And it would be merged into this repository soon.
+
 ## Update 2022Nov
 
 Boolmap vfe is implemented.
